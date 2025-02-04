@@ -1,36 +1,35 @@
 import 'dart:async';
-import 'dart:math';
 
 import 'package:bloc/bloc.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
 
 part 'state.freezed.dart';
 
-class PumpStation extends Cubit<PumpStationState> {
-  late final Timer _timer;
-  // late final Random _rand;
+final initialState = PumpStationState(
+  reservoir: 1000,
+  reservoirSize: 1000,
+  valveSpeed: 0,
+  pumps: Map.fromEntries(List.generate(3, (i) => MapEntry(i + 1, PumpState(
+    mode: PumpMode.idle,
+    operatingTime: 0
+  ))))
+);
 
-  PumpStation() : super(PumpStationState(
-    time: 0,
-    reservoir: 1000,
-    reservoirSize: 1000,
-    valveSpeed: 0,
-    pumps: Map.fromEntries(List.generate(3, (i) => MapEntry(i + 1, PumpState(
-      mode: PumpMode.idle,
-      operatingTime: 0
-    ))))
-  )) {
-    // _rand = Random(DateTime.now().millisecondsSinceEpoch);
-    _timer = Timer.periodic(Duration(milliseconds: 20), (_) => _tick());
+class PumpStation extends Cubit<PumpStationState> {
+  Timer? _timer;
+
+  PumpStation() : super(initialState) {
+    startSimulation();
   }
 
   void _tick() {
-    int newReservoir = state.reservoir - state.valveSpeed + state.pumps.values.fold(0, (prev, pump) => prev + (pump.mode == PumpMode.running ? 1 : 0));
+    int newReservoir = state.reservoir - state.valveSpeed + state.pumps.values.fold(0, (prev, pump) => prev + (pump.mode == PumpMode.running ? 2 : 0));
     if(newReservoir > state.reservoirSize) newReservoir = state.reservoirSize;
+    if(newReservoir < 0) newReservoir = 0;
 
     PumpStationState newState = state.copyWith(reservoir: newReservoir);
     
-    if(state.reservoir < 0.25 && state.pumpsRunning < 2 || state.reservoir < 0.5 && state.pumpsRunning < 1) {
+    if(state.reservoirPercentage < 0.25 && state.pumpsRunning < 2 || state.reservoirPercentage < 0.5 && state.pumpsRunning < 1) {
       int? pumpToRun = _choosePumpToRun();
       if(pumpToRun != null) {
         newState = newState.copyWith(pumps: {
@@ -38,7 +37,7 @@ class PumpStation extends Cubit<PumpStationState> {
           pumpToRun: newState.pumps[pumpToRun]!.copyWith(mode: PumpMode.running)
         });
       }
-    } else if(state.reservoir >= 0.5 && state.pumpsRunning >= 2 || state.reservoir == 1 && state.pumpsRunning >= 1) {
+    } else if(state.reservoirPercentage >= 0.5 && state.pumpsRunning >= 2 || state.reservoirPercentage == 1 && state.pumpsRunning >= 1) {
       int? pumpToStop = _choosePumpToStop();
       if(pumpToStop != null) {
         newState = newState.copyWith(pumps: {
@@ -48,9 +47,14 @@ class PumpStation extends Cubit<PumpStationState> {
       }
     }
 
-    // if(_rand.nextDouble() < 0.3) {
-      
-    // }
+    newState = newState.copyWith(
+      pumps: newState.pumps.map(
+        (key, value) => MapEntry(
+          key,
+          value.copyWith(operatingTime: value.operatingTime + (value.mode == PumpMode.running ? 1 : 0))
+        )
+      )
+    );
 
     emit(newState);
   }
@@ -73,9 +77,41 @@ class PumpStation extends Cubit<PumpStationState> {
     return selected;
   }
 
+  void setValveSpeed(int speed) {
+    emit(state.copyWith(valveSpeed: speed));
+  }
+
+  void makePumpFaulty(int pump) {
+    emit(state.copyWith(pumps: {
+      ...state.pumps,
+      pump: state.pumps[pump]!.copyWith(mode: PumpMode.faulty)
+    }));
+  }
+
+  void makePumpHealthy(int pump) {
+    emit(state.copyWith(pumps: {
+      ...state.pumps,
+      pump: state.pumps[pump]!.copyWith(mode: PumpMode.idle)
+    }));
+  }
+
+  void startSimulation() {
+    _timer = Timer.periodic(Duration(milliseconds: 20), (_) => _tick());
+  }
+
+  void stopSimulation() {
+    _timer?.cancel();
+  }
+
+  void resetSimulation() {
+    stopSimulation();
+    emit(initialState);
+    startSimulation();
+  }
+
   @override
   Future<void> close() {
-    _timer.cancel();
+    stopSimulation();
     return super.close();
   }
 }
@@ -83,10 +119,8 @@ class PumpStation extends Cubit<PumpStationState> {
 @freezed
 class PumpStationState with _$PumpStationState {
   const factory PumpStationState({
-    // required PumpStationMode mode,
     required int reservoir,
     required int reservoirSize,
-    required int time,
     required Map<int, PumpState> pumps,
     required int valveSpeed
   }) = _PumpStationState;
@@ -94,14 +128,8 @@ class PumpStationState with _$PumpStationState {
   const PumpStationState._();
 
   int get pumpsRunning => pumps.values.where((pump) => pump.mode == PumpMode.running).length;
+  double get reservoirPercentage => reservoir / reservoirSize;
 }
-
-// enum PumpStationMode {
-//   idle,
-//   pumping_slow,
-//   pumping_fast,
-//   pumping_max
-// }
 
 @freezed
 class PumpState with _$PumpState {

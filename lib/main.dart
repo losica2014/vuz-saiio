@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 
+import 'lab1/page.dart';
+import 'lab2/page.dart';
+
 void main() {
   runApp(const MyApp());
 }
@@ -10,38 +13,15 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'САиИО: Л2',
+      title: 'САиИО',
       theme: ThemeData(
         
       ),
-      home: const MyHomePage(),
-    );
-  }
-}
-
-class MyHomePage extends StatefulWidget {
-  const MyHomePage({super.key});
-
-  @override
-  State<MyHomePage> createState() => _MyHomePageState();
-}
-
-class _MyHomePageState extends State<MyHomePage> {
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text("Лабораторная работа 2"),
-      ),
-      body: Center(
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            
-          ],
-        ),
-      ),
+      initialRoute: '/',
+      routes: {
+        '/': (context) => const HabitatPage(),
+        '/lab2': (context) => const PumpStationPage(),
+      },
     );
   }
 }

@@ -1,4 +1,4 @@
-package ru.aloz.saiio.lab2
+package ru.aloz.saiio.lab
 
 import io.flutter.embedding.android.FlutterActivity
 

@@ -16,10 +16,8 @@ final _privateConstructorUsedError = UnsupportedError(
 
 /// @nodoc
 mixin _$PumpStationState {
-// required PumpStationMode mode,
   int get reservoir => throw _privateConstructorUsedError;
   int get reservoirSize => throw _privateConstructorUsedError;
-  int get time => throw _privateConstructorUsedError;
   Map<int, PumpState> get pumps => throw _privateConstructorUsedError;
   int get valveSpeed => throw _privateConstructorUsedError;
 
@@ -39,7 +37,6 @@ abstract class $PumpStationStateCopyWith<$Res> {
   $Res call(
       {int reservoir,
       int reservoirSize,
-      int time,
       Map<int, PumpState> pumps,
       int valveSpeed});
 }
@@ -61,7 +58,6 @@ class _$PumpStationStateCopyWithImpl<$Res, $Val extends PumpStationState>
   $Res call({
     Object? reservoir = null,
     Object? reservoirSize = null,
-    Object? time = null,
     Object? pumps = null,
     Object? valveSpeed = null,
   }) {
@@ -73,10 +69,6 @@ class _$PumpStationStateCopyWithImpl<$Res, $Val extends PumpStationState>
       reservoirSize: null == reservoirSize
           ? _value.reservoirSize
           : reservoirSize // ignore: cast_nullable_to_non_nullable
-              as int,
-      time: null == time
-          ? _value.time
-          : time // ignore: cast_nullable_to_non_nullable
               as int,
       pumps: null == pumps
           ? _value.pumps
@@ -101,7 +93,6 @@ abstract class _$$PumpStationStateImplCopyWith<$Res>
   $Res call(
       {int reservoir,
       int reservoirSize,
-      int time,
       Map<int, PumpState> pumps,
       int valveSpeed});
 }
@@ -121,7 +112,6 @@ class __$$PumpStationStateImplCopyWithImpl<$Res>
   $Res call({
     Object? reservoir = null,
     Object? reservoirSize = null,
-    Object? time = null,
     Object? pumps = null,
     Object? valveSpeed = null,
   }) {
@@ -133,10 +123,6 @@ class __$$PumpStationStateImplCopyWithImpl<$Res>
       reservoirSize: null == reservoirSize
           ? _value.reservoirSize
           : reservoirSize // ignore: cast_nullable_to_non_nullable
-              as int,
-      time: null == time
-          ? _value.time
-          : time // ignore: cast_nullable_to_non_nullable
               as int,
       pumps: null == pumps
           ? _value._pumps
@@ -156,19 +142,15 @@ class _$PumpStationStateImpl extends _PumpStationState {
   const _$PumpStationStateImpl(
       {required this.reservoir,
       required this.reservoirSize,
-      required this.time,
       required final Map<int, PumpState> pumps,
       required this.valveSpeed})
       : _pumps = pumps,
         super._();
 
-// required PumpStationMode mode,
   @override
   final int reservoir;
   @override
   final int reservoirSize;
-  @override
-  final int time;
   final Map<int, PumpState> _pumps;
   @override
   Map<int, PumpState> get pumps {
@@ -182,7 +164,7 @@ class _$PumpStationStateImpl extends _PumpStationState {
 
   @override
   String toString() {
-    return 'PumpStationState(reservoir: $reservoir, reservoirSize: $reservoirSize, time: $time, pumps: $pumps, valveSpeed: $valveSpeed)';
+    return 'PumpStationState(reservoir: $reservoir, reservoirSize: $reservoirSize, pumps: $pumps, valveSpeed: $valveSpeed)';
   }
 
   @override
@@ -194,14 +176,13 @@ class _$PumpStationStateImpl extends _PumpStationState {
                 other.reservoir == reservoir) &&
             (identical(other.reservoirSize, reservoirSize) ||
                 other.reservoirSize == reservoirSize) &&
-            (identical(other.time, time) || other.time == time) &&
             const DeepCollectionEquality().equals(other._pumps, _pumps) &&
             (identical(other.valveSpeed, valveSpeed) ||
                 other.valveSpeed == valveSpeed));
   }
 
   @override
-  int get hashCode => Object.hash(runtimeType, reservoir, reservoirSize, time,
+  int get hashCode => Object.hash(runtimeType, reservoir, reservoirSize,
       const DeepCollectionEquality().hash(_pumps), valveSpeed);
 
   /// Create a copy of PumpStationState
@@ -218,18 +199,14 @@ abstract class _PumpStationState extends PumpStationState {
   const factory _PumpStationState(
       {required final int reservoir,
       required final int reservoirSize,
-      required final int time,
       required final Map<int, PumpState> pumps,
       required final int valveSpeed}) = _$PumpStationStateImpl;
   const _PumpStationState._() : super._();
 
-// required PumpStationMode mode,
   @override
   int get reservoir;
   @override
   int get reservoirSize;
-  @override
-  int get time;
   @override
   Map<int, PumpState> get pumps;
   @override
