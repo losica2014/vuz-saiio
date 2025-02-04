@@ -20,13 +20,13 @@ class HabitatPage extends StatefulWidget {
 
 class _HabitatPageState extends State<HabitatPage> {
   late final Habitat habitat;
-  double side = 10;
+  double side = 20;
   int numberOfRabbits = 50;
-  int numberOfWolvesM = 10;
-  int numberOfWolvesF = 5;
-  int wolfLifetime = 5;
-  int habitatWidth = 50;
-  int habitatHeight = 50;
+  int numberOfWolvesM = 15;
+  int numberOfWolvesF = 15;
+  int wolfLifetime = 15;
+  int habitatWidth = 30;
+  int habitatHeight = 15;
 
   final TextEditingController numberOfRabbitsController = TextEditingController();
   final TextEditingController numberOfWolvesMController = TextEditingController();
@@ -95,105 +95,135 @@ class _HabitatPageState extends State<HabitatPage> {
               fit: FlexFit.tight,
               child: Padding(
                 padding: const EdgeInsets.all(32),
-                child: Column(
-                  spacing: 16,
-                  children: [
-                    Row(
-                      spacing: 8,
-                      children: [
-                        Text("Масштаб поля"),
-                        Spacer(),
-                        Text("${side.toInt()}"),
-                        IconButton.filledTonal(
-                          onPressed: () => setState(() => side = min(side + 5, 50)),
-                          icon: Icon(Symbols.zoom_in),
+                child: SingleChildScrollView(
+                  child: Column(
+                    spacing: 16,
+                    children: [
+                      Row(
+                        spacing: 8,
+                        children: [
+                          Text("Масштаб поля"),
+                          Spacer(),
+                          Text("${side.toInt()}"),
+                          IconButton.filledTonal(
+                            onPressed: () => setState(() => side = min(side + 5, 50)),
+                            icon: Icon(Symbols.zoom_in),
+                          ),
+                          IconButton.filledTonal(
+                            onPressed: () => setState(() => side = max(side - 5, 5)),
+                            icon: Icon(Symbols.zoom_out),
+                          ),
+                        ],
+                      ),
+                      TextField(
+                        keyboardType: TextInputType.number,
+                        decoration: InputDecoration(
+                          labelText: "Количество кроликов"
                         ),
-                        IconButton.filledTonal(
-                          onPressed: () => setState(() => side = max(side - 5, 5)),
-                          icon: Icon(Symbols.zoom_out),
+                        controller: numberOfRabbitsController,
+                        inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                        onChanged: (value) => setState(() => numberOfRabbits = int.parse(value)),
+                      ),
+                      TextField(
+                        keyboardType: TextInputType.number,
+                        decoration: InputDecoration(
+                          labelText: "Количество волков"
                         ),
-                      ],
-                    ),
-                    TextField(
-                      keyboardType: TextInputType.number,
-                      decoration: InputDecoration(
-                        labelText: "Количество кроликов"
+                        controller: numberOfWolvesMController,
+                        inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                        onChanged: (value) => setState(() => numberOfWolvesM = int.parse(value)),
                       ),
-                      controller: numberOfRabbitsController,
-                      inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-                      onChanged: (value) => setState(() => numberOfRabbits = int.parse(value)),
-                    ),
-                    TextField(
-                      keyboardType: TextInputType.number,
-                      decoration: InputDecoration(
-                        labelText: "Количество волков"
+                      TextField(
+                        keyboardType: TextInputType.number,
+                        decoration: InputDecoration(
+                          labelText: "Количество волчиц"
+                        ),
+                        controller: numberOfWolvesFController,
+                        inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                        onChanged: (value) => setState(() => numberOfWolvesF = int.parse(value)),
                       ),
-                      controller: numberOfWolvesMController,
-                      inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-                      onChanged: (value) => setState(() => numberOfWolvesM = int.parse(value)),
-                    ),
-                    TextField(
-                      keyboardType: TextInputType.number,
-                      decoration: InputDecoration(
-                        labelText: "Количество волчиц"
+                      TextField(
+                        keyboardType: TextInputType.number,
+                        decoration: InputDecoration(
+                          labelText: "Время жизни волка"
+                        ),
+                        controller: wolfLifetimeController,
+                        inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                        onChanged: (value) => setState(() => wolfLifetime = int.parse(value)),
                       ),
-                      controller: numberOfWolvesFController,
-                      inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-                      onChanged: (value) => setState(() => numberOfWolvesF = int.parse(value)),
-                    ),
-                    TextField(
-                      keyboardType: TextInputType.number,
-                      decoration: InputDecoration(
-                        labelText: "Время жизни волка"
+                      TextField(
+                        keyboardType: TextInputType.number,
+                        decoration: InputDecoration(
+                          labelText: "Ширина поля"
+                        ),
+                        controller: habitatWidthController,
+                        inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                        onChanged: (value) => setState(() => habitatWidth = int.parse(value)),
                       ),
-                      controller: wolfLifetimeController,
-                      inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-                      onChanged: (value) => setState(() => wolfLifetime = int.parse(value)),
-                    ),
-                    TextField(
-                      keyboardType: TextInputType.number,
-                      decoration: InputDecoration(
-                        labelText: "Ширина поля"
+                      TextField(
+                        keyboardType: TextInputType.number,
+                        decoration: InputDecoration(
+                          labelText: "Высота поля"
+                        ),
+                        controller: habitatHeightController,
+                        inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                        onChanged: (value) => setState(() => habitatHeight = int.parse(value)),
                       ),
-                      controller: habitatWidthController,
-                      inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-                      onChanged: (value) => setState(() => habitatWidth = int.parse(value)),
-                    ),
-                    TextField(
-                      keyboardType: TextInputType.number,
-                      decoration: InputDecoration(
-                        labelText: "Высота поля"
+                      FilledButton(
+                        onPressed: () => habitat.generateState(
+                          numberOfRabbits: numberOfRabbits,
+                          numberOfWolvesM: numberOfWolvesM,
+                          numberOfWolvesF: numberOfWolvesF,
+                          wolfLifetime: wolfLifetime,
+                          habitatWidth: habitatWidth,
+                          habitatHeight: habitatHeight
+                        ),
+                        child: Text("Сгенерировать состояние"),
                       ),
-                      controller: habitatHeightController,
-                      inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-                      onChanged: (value) => setState(() => habitatHeight = int.parse(value)),
-                    ),
-                    FilledButton(
-                      onPressed: () => habitat.generateState(
-                        numberOfRabbits: numberOfRabbits,
-                        numberOfWolvesM: numberOfWolvesM,
-                        numberOfWolvesF: numberOfWolvesF,
-                        wolfLifetime: wolfLifetime,
-                        habitatWidth: habitatWidth,
-                        habitatHeight: habitatHeight
+                      Row(
+                        spacing: 8,
+                        children: [
+                          Expanded(
+                            child: FilledButton(
+                              onPressed: () => habitat.stepState(),
+                              child: Text("Шаг"),
+                            ),
+                          ),
+                          IconButton.filled(
+                            onPressed: () => habitat.startSimulation(),
+                            icon: Icon(Symbols.play_arrow),
+                          ),
+                          IconButton.filled(
+                            onPressed: () => habitat.stopSimulation(),
+                            icon: Icon(Symbols.pause),
+                          ),
+                        ]
                       ),
-                      child: Text("Сгенерировать состояние"),
-                    ),
-                    BlocBuilder<Habitat, HabitatState>(
-                      buildWhen: (previous, current) => previous.logs != current.logs,
-                      builder: (context, state) {
-                        return SfCartesianChart(
-                          series: [
-                            LineSeries<LogEntry, dynamic>(
-                              dataSource: state.logs,
-                              xValueMapper: (e, _) => e.step,
-                              yValueMapper: (e, _) => e.rabbits
-                            )
-                          ],
-                        );
-                      }
-                    )
-                  ],
+                      BlocBuilder<Habitat, HabitatState>(
+                        buildWhen: (previous, current) => previous.logs != current.logs,
+                        builder: (context, state) {
+                          return SfCartesianChart(
+                            series: [
+                              LineSeries<LogEntry, dynamic>(
+                                dataSource: state.logs,
+                                color: Colors.green,
+                                name: "Кролики",
+                                xValueMapper: (e, _) => e.step,
+                                yValueMapper: (e, _) => e.rabbits
+                              ),
+                              LineSeries<LogEntry, dynamic>(
+                                dataSource: state.logs,
+                                color: Colors.red,
+                                name: "Волки",
+                                xValueMapper: (e, _) => e.step,
+                                yValueMapper: (e, _) => e.wolves
+                              )
+                            ],
+                          );
+                        }
+                      )
+                    ],
+                  ),
                 ),
               ),
             )
@@ -206,14 +236,14 @@ class _HabitatPageState extends State<HabitatPage> {
   TableViewCell _buildCell(BuildContext context, Cell cell) {
     return TableViewCell(
       child: Container(
-        // width: 10,
-        // height: 10,
         color: switch(cell) {
           EmptyCell _ => Colors.grey.shade300,
           Rabbit _ => Colors.green,
           Wolf w => w.gender == Gender.male ? Colors.red : Colors.pink,
           _ => Colors.black
-        }
+        },
+        alignment: Alignment.center,
+        child: (cell is Wolf) ? Text(cell.hunger.toString(), style: TextStyle(color: Colors.white)) : null,
       ),
     );
   }

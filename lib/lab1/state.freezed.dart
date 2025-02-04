@@ -24,6 +24,7 @@ mixin _$HabitatState {
   int get numberOfWolvesF => throw _privateConstructorUsedError;
   int get wolfLifetime => throw _privateConstructorUsedError;
   List<LogEntry> get logs => throw _privateConstructorUsedError;
+  bool get overpopulation => throw _privateConstructorUsedError;
 
   /// Create a copy of HabitatState
   /// with the given fields replaced by the non-null parameter values.
@@ -46,7 +47,8 @@ abstract class $HabitatStateCopyWith<$Res> {
       int numberOfWolvesM,
       int numberOfWolvesF,
       int wolfLifetime,
-      List<LogEntry> logs});
+      List<LogEntry> logs,
+      bool overpopulation});
 }
 
 /// @nodoc
@@ -72,6 +74,7 @@ class _$HabitatStateCopyWithImpl<$Res, $Val extends HabitatState>
     Object? numberOfWolvesF = null,
     Object? wolfLifetime = null,
     Object? logs = null,
+    Object? overpopulation = null,
   }) {
     return _then(_value.copyWith(
       cells: null == cells
@@ -106,6 +109,10 @@ class _$HabitatStateCopyWithImpl<$Res, $Val extends HabitatState>
           ? _value.logs
           : logs // ignore: cast_nullable_to_non_nullable
               as List<LogEntry>,
+      overpopulation: null == overpopulation
+          ? _value.overpopulation
+          : overpopulation // ignore: cast_nullable_to_non_nullable
+              as bool,
     ) as $Val);
   }
 }
@@ -126,7 +133,8 @@ abstract class _$$HabitatStateImplCopyWith<$Res>
       int numberOfWolvesM,
       int numberOfWolvesF,
       int wolfLifetime,
-      List<LogEntry> logs});
+      List<LogEntry> logs,
+      bool overpopulation});
 }
 
 /// @nodoc
@@ -150,6 +158,7 @@ class __$$HabitatStateImplCopyWithImpl<$Res>
     Object? numberOfWolvesF = null,
     Object? wolfLifetime = null,
     Object? logs = null,
+    Object? overpopulation = null,
   }) {
     return _then(_$HabitatStateImpl(
       cells: null == cells
@@ -184,6 +193,10 @@ class __$$HabitatStateImplCopyWithImpl<$Res>
           ? _value._logs
           : logs // ignore: cast_nullable_to_non_nullable
               as List<LogEntry>,
+      overpopulation: null == overpopulation
+          ? _value.overpopulation
+          : overpopulation // ignore: cast_nullable_to_non_nullable
+              as bool,
     ));
   }
 }
@@ -199,7 +212,8 @@ class _$HabitatStateImpl extends _HabitatState {
       required this.numberOfWolvesM,
       required this.numberOfWolvesF,
       required this.wolfLifetime,
-      final List<LogEntry> logs = const []})
+      final List<LogEntry> logs = const [],
+      this.overpopulation = false})
       : _cells = cells,
         _logs = logs,
         super._();
@@ -234,8 +248,12 @@ class _$HabitatStateImpl extends _HabitatState {
   }
 
   @override
+  @JsonKey()
+  final bool overpopulation;
+
+  @override
   String toString() {
-    return 'HabitatState(cells: $cells, width: $width, height: $height, numberOfRabbits: $numberOfRabbits, numberOfWolvesM: $numberOfWolvesM, numberOfWolvesF: $numberOfWolvesF, wolfLifetime: $wolfLifetime, logs: $logs)';
+    return 'HabitatState(cells: $cells, width: $width, height: $height, numberOfRabbits: $numberOfRabbits, numberOfWolvesM: $numberOfWolvesM, numberOfWolvesF: $numberOfWolvesF, wolfLifetime: $wolfLifetime, logs: $logs, overpopulation: $overpopulation)';
   }
 
   @override
@@ -254,7 +272,9 @@ class _$HabitatStateImpl extends _HabitatState {
                 other.numberOfWolvesF == numberOfWolvesF) &&
             (identical(other.wolfLifetime, wolfLifetime) ||
                 other.wolfLifetime == wolfLifetime) &&
-            const DeepCollectionEquality().equals(other._logs, _logs));
+            const DeepCollectionEquality().equals(other._logs, _logs) &&
+            (identical(other.overpopulation, overpopulation) ||
+                other.overpopulation == overpopulation));
   }
 
   @override
@@ -267,7 +287,8 @@ class _$HabitatStateImpl extends _HabitatState {
       numberOfWolvesM,
       numberOfWolvesF,
       wolfLifetime,
-      const DeepCollectionEquality().hash(_logs));
+      const DeepCollectionEquality().hash(_logs),
+      overpopulation);
 
   /// Create a copy of HabitatState
   /// with the given fields replaced by the non-null parameter values.
@@ -287,7 +308,8 @@ abstract class _HabitatState extends HabitatState {
       required final int numberOfWolvesM,
       required final int numberOfWolvesF,
       required final int wolfLifetime,
-      final List<LogEntry> logs}) = _$HabitatStateImpl;
+      final List<LogEntry> logs,
+      final bool overpopulation}) = _$HabitatStateImpl;
   const _HabitatState._() : super._();
 
   @override
@@ -306,6 +328,8 @@ abstract class _HabitatState extends HabitatState {
   int get wolfLifetime;
   @override
   List<LogEntry> get logs;
+  @override
+  bool get overpopulation;
 
   /// Create a copy of HabitatState
   /// with the given fields replaced by the non-null parameter values.
@@ -318,8 +342,8 @@ abstract class _HabitatState extends HabitatState {
 /// @nodoc
 mixin _$Wolf {
   Gender get gender => throw _privateConstructorUsedError;
-  int get age => throw _privateConstructorUsedError;
-  double get hunger => throw _privateConstructorUsedError;
+  int get hunger => throw _privateConstructorUsedError;
+  bool get reproductionBlocked => throw _privateConstructorUsedError;
 
   /// Create a copy of Wolf
   /// with the given fields replaced by the non-null parameter values.
@@ -332,7 +356,7 @@ abstract class $WolfCopyWith<$Res> {
   factory $WolfCopyWith(Wolf value, $Res Function(Wolf) then) =
       _$WolfCopyWithImpl<$Res, Wolf>;
   @useResult
-  $Res call({Gender gender, int age, double hunger});
+  $Res call({Gender gender, int hunger, bool reproductionBlocked});
 }
 
 /// @nodoc
@@ -351,22 +375,22 @@ class _$WolfCopyWithImpl<$Res, $Val extends Wolf>
   @override
   $Res call({
     Object? gender = null,
-    Object? age = null,
     Object? hunger = null,
+    Object? reproductionBlocked = null,
   }) {
     return _then(_value.copyWith(
       gender: null == gender
           ? _value.gender
           : gender // ignore: cast_nullable_to_non_nullable
               as Gender,
-      age: null == age
-          ? _value.age
-          : age // ignore: cast_nullable_to_non_nullable
-              as int,
       hunger: null == hunger
           ? _value.hunger
           : hunger // ignore: cast_nullable_to_non_nullable
-              as double,
+              as int,
+      reproductionBlocked: null == reproductionBlocked
+          ? _value.reproductionBlocked
+          : reproductionBlocked // ignore: cast_nullable_to_non_nullable
+              as bool,
     ) as $Val);
   }
 }
@@ -378,7 +402,7 @@ abstract class _$$WolfImplCopyWith<$Res> implements $WolfCopyWith<$Res> {
       __$$WolfImplCopyWithImpl<$Res>;
   @override
   @useResult
-  $Res call({Gender gender, int age, double hunger});
+  $Res call({Gender gender, int hunger, bool reproductionBlocked});
 }
 
 /// @nodoc
@@ -394,22 +418,22 @@ class __$$WolfImplCopyWithImpl<$Res>
   @override
   $Res call({
     Object? gender = null,
-    Object? age = null,
     Object? hunger = null,
+    Object? reproductionBlocked = null,
   }) {
     return _then(_$WolfImpl(
       gender: null == gender
           ? _value.gender
           : gender // ignore: cast_nullable_to_non_nullable
               as Gender,
-      age: null == age
-          ? _value.age
-          : age // ignore: cast_nullable_to_non_nullable
-              as int,
       hunger: null == hunger
           ? _value.hunger
           : hunger // ignore: cast_nullable_to_non_nullable
-              as double,
+              as int,
+      reproductionBlocked: null == reproductionBlocked
+          ? _value.reproductionBlocked
+          : reproductionBlocked // ignore: cast_nullable_to_non_nullable
+              as bool,
     ));
   }
 }
@@ -417,20 +441,23 @@ class __$$WolfImplCopyWithImpl<$Res>
 /// @nodoc
 
 class _$WolfImpl implements _Wolf {
-  const _$WolfImpl({required this.gender, this.age = 0, this.hunger = 0});
+  const _$WolfImpl(
+      {required this.gender,
+      this.hunger = 0,
+      this.reproductionBlocked = false});
 
   @override
   final Gender gender;
   @override
   @JsonKey()
-  final int age;
+  final int hunger;
   @override
   @JsonKey()
-  final double hunger;
+  final bool reproductionBlocked;
 
   @override
   String toString() {
-    return 'Wolf(gender: $gender, age: $age, hunger: $hunger)';
+    return 'Wolf(gender: $gender, hunger: $hunger, reproductionBlocked: $reproductionBlocked)';
   }
 
   @override
@@ -439,12 +466,14 @@ class _$WolfImpl implements _Wolf {
         (other.runtimeType == runtimeType &&
             other is _$WolfImpl &&
             (identical(other.gender, gender) || other.gender == gender) &&
-            (identical(other.age, age) || other.age == age) &&
-            (identical(other.hunger, hunger) || other.hunger == hunger));
+            (identical(other.hunger, hunger) || other.hunger == hunger) &&
+            (identical(other.reproductionBlocked, reproductionBlocked) ||
+                other.reproductionBlocked == reproductionBlocked));
   }
 
   @override
-  int get hashCode => Object.hash(runtimeType, gender, age, hunger);
+  int get hashCode =>
+      Object.hash(runtimeType, gender, hunger, reproductionBlocked);
 
   /// Create a copy of Wolf
   /// with the given fields replaced by the non-null parameter values.
@@ -458,15 +487,15 @@ class _$WolfImpl implements _Wolf {
 abstract class _Wolf implements Wolf {
   const factory _Wolf(
       {required final Gender gender,
-      final int age,
-      final double hunger}) = _$WolfImpl;
+      final int hunger,
+      final bool reproductionBlocked}) = _$WolfImpl;
 
   @override
   Gender get gender;
   @override
-  int get age;
+  int get hunger;
   @override
-  double get hunger;
+  bool get reproductionBlocked;
 
   /// Create a copy of Wolf
   /// with the given fields replaced by the non-null parameter values.

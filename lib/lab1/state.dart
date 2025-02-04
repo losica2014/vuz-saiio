@@ -10,71 +10,161 @@ class Habitat extends Cubit<HabitatState> {
   Timer? _timer;
   final _rand = Random(DateTime.now().millisecondsSinceEpoch);
 
-  Habitat() : super(HabitatState.empty()) {
-    // generateState(
-    //   numberOfRabbits: 10,
-    //   numberOfWolvesM: 10,
-    //   numberOfWolvesF: 10,
-    //   wolfLifetime: 10,
-    //   habitatWidth: 10,
-    //   habitatHeight: 10
-    // );
+  Habitat() : super(HabitatState.empty());
+
+  void startSimulation() {
+    _timer = Timer.periodic(Duration(milliseconds: 20), (_) => (state.overpopulation || state.rabbits == 0 && state.wolves == 0) ? stopSimulation() : stepState());
+  }
+
+  void stopSimulation() {
+    _timer?.cancel();
+  }
+
+  @override
+  Future<void> close() {
+    stopSimulation();
+    return super.close();
   }
 
   void generateState({required int numberOfRabbits, required int numberOfWolvesM, required int numberOfWolvesF, required int wolfLifetime, required int habitatWidth, required int habitatHeight}) {
     List<List<Cell>> state = List.generate(habitatWidth, (_) => List.generate(habitatHeight, (_) => EmptyCell()));
 
     int chosenWidth, chosenHeight;
+
     try {
-    for(int i = 0; i < numberOfRabbits; i++) {
-      final cell = _getRandomFreeCell(state, habitatWidth, habitatHeight);
-      if(cell == null) throw Exception("Нет места");
-      (chosenWidth, chosenHeight) = cell;
-      
-      print("Добавлен кролик: $chosenWidth, $chosenHeight");
-      state[chosenWidth][chosenHeight] = Rabbit();
-    }
+      for(int i = 0; i < numberOfRabbits; i++) {
+        final cell = _getRandomFreeCell(state, habitatWidth, habitatHeight);
+        (chosenWidth, chosenHeight) = cell;
+        
+        print("Добавлен кролик: $chosenWidth, $chosenHeight");
+        state[chosenWidth][chosenHeight] = Rabbit();
+      }
 
-    for(int i = 0; i < numberOfWolvesM; i++) {
-      final cell = _getRandomFreeCell(state, habitatWidth, habitatHeight);
-      if(cell == null) throw Exception("Нет места");
-      (chosenWidth, chosenHeight) = cell;
-      
-      print("Добавлен волк (М): $chosenWidth, $chosenHeight");
-      state[chosenWidth][chosenHeight] = Wolf(gender: Gender.male);
-    }
+      for(int i = 0; i < numberOfWolvesM; i++) {
+        final cell = _getRandomFreeCell(state, habitatWidth, habitatHeight);
+        (chosenWidth, chosenHeight) = cell;
+        
+        print("Добавлен волк (М): $chosenWidth, $chosenHeight");
+        state[chosenWidth][chosenHeight] = Wolf(gender: Gender.male);
+      }
 
-    for(int i = 0; i < numberOfWolvesF; i++) {
-      final cell = _getRandomFreeCell(state, habitatWidth, habitatHeight);
-      if(cell == null) throw Exception("Нет места");
-      (chosenWidth, chosenHeight) = cell;
+      for(int i = 0; i < numberOfWolvesF; i++) {
+        final cell = _getRandomFreeCell(state, habitatWidth, habitatHeight);
+        (chosenWidth, chosenHeight) = cell;
 
-      print("Добавлен волк (Ж): $chosenWidth, $chosenHeight");
-      state[chosenWidth][chosenHeight] = Wolf(gender: Gender.female);
-    }
-    } catch(e) {
-      print(e);
-    }
+        print("Добавлен волк (Ж): $chosenWidth, $chosenHeight");
+        state[chosenWidth][chosenHeight] = Wolf(gender: Gender.female);
+      }
+    } catch(e) {}
 
     emit(HabitatState(cells: state, width: habitatWidth, height: habitatHeight, numberOfRabbits: numberOfRabbits, numberOfWolvesM: numberOfWolvesM, numberOfWolvesF: numberOfWolvesF, wolfLifetime: wolfLifetime));
   }
 
-  (int, int)? _getRandomFreeCell(List<List<Cell>> state, int habitatWidth, int habitatHeight) {
+  void stepState() {
+    List<List<Cell>> newState = List.generate(state.width, (x) => List.generate(state.height, (y) => state.cells[x][y]));
+
+    bool overpopulation = false;
+
+    try {
+      for(int i = 0; i < state.width; i++) {
+        for(int j = 0; j < state.height; j++) {
+          final cell = state.cells[i][j];
+
+          if(cell is Rabbit) {
+            List<Coord> surroundingCells = _getSurroundingCells<EmptyCell>(newState, state.width, state.height, i, j);
+
+            if(surroundingCells.isEmpty) {
+              continue;
+            }
+
+            if(_rand.nextDouble() < 0.1) {
+              final selectedCell = surroundingCells[_rand.nextInt(surroundingCells.length)];
+              final (x, y) = selectedCell;
+              newState[x][y] = Rabbit();
+              continue;
+            }
+
+            if(surroundingCells.isNotEmpty) {
+              final selectedCell = surroundingCells[_rand.nextInt(surroundingCells.length)];
+              final (x, y) = selectedCell;
+              newState[x][y] = Rabbit();
+              newState[i][j] = EmptyCell();
+              continue;
+            }
+          }
+
+          if(cell is Wolf) {
+            List<Coord> food = _getSurroundingCells<Rabbit>(newState, state.width, state.height, i, j);
+
+            if(cell.hunger == state.wolfLifetime) {
+              newState[i][j] = EmptyCell();
+              continue;
+            } else if(food.isNotEmpty && cell.hunger >= state.wolfLifetime / 2) {
+              final selectedCell = food[_rand.nextInt(food.length)];
+              final (x, y) = selectedCell;
+              newState[x][y] = cell.copyWith(hunger: 0);
+              newState[i][j] = EmptyCell();
+              continue;
+            } else {
+              List<Coord> mates = _getSurroundingCells<Wolf>(newState, state.width, state.height, i, j, (w) => w.gender == Gender.female);
+              List<Coord> free = _getSurroundingCells<EmptyCell>(newState, state.width, state.height, i, j);
+              if(cell.gender == Gender.male && mates.isNotEmpty && cell.hunger <= state.wolfLifetime / 4 && free.isNotEmpty) {
+                final selectedCell = free[_rand.nextInt(free.length)];
+                final (x, y) = selectedCell;
+                newState[x][y] = cell.copyWith(gender: _rand.nextBool() ? Gender.male : Gender.female);
+                free.remove(selectedCell);
+                newState[i][j] = cell.copyWith(hunger: cell.hunger + 1);
+                continue;
+              }
+              if(free.isNotEmpty) {
+                final selectedCell = free[_rand.nextInt(free.length)];
+                final (x, y) = selectedCell;
+                newState[x][y] = cell.copyWith(hunger: cell.hunger + 1);
+                newState[i][j] = EmptyCell();
+                continue;
+              } else {
+                newState[i][j] = cell.copyWith(hunger: cell.hunger + 1);
+                continue;
+              }
+            }
+          }
+        }
+      }
+    } catch(e) {
+      print(e);
+      overpopulation = true;
+    }
+
+    emit(state.copyWith(
+      cells: newState,
+      logs: [...state.logs, LogEntry(step: state.logs.length, rabbits: state.rabbits, wolves: state.wolves)],
+      overpopulation: overpopulation
+    ));
+  }
+
+  Coord _getRandomFreeCell(List<List<Cell>> state, int habitatWidth, int habitatHeight) {
     final size = habitatHeight * habitatWidth;
     int chosenIndex = _rand.nextInt(size - 1);
-    // final orig = chosenIndex;
 
     for(int i = 0; i < size; i++) {
       if(state[chosenIndex % habitatWidth][chosenIndex ~/ habitatWidth] is EmptyCell) {
-        // print("${chosenIndex % habitatWidth}, ${chosenIndex ~/ habitatWidth}: $orig -> $chosenIndex");
         return (chosenIndex % habitatWidth, chosenIndex ~/ habitatWidth);
       }
       chosenIndex = (chosenIndex + 1) % size;
-      // print("$i: $orig -> $chosenIndex");
     }
 
-    // print("NF $orig -> $chosenIndex");
-    return null;
+    print("Нет места. ${state[chosenIndex % habitatWidth][chosenIndex ~/ habitatWidth]} -  ${chosenIndex % habitatWidth}, ${chosenIndex ~/ habitatWidth}");
+    throw Exception("Нет места");
+  }
+  List<Coord> _getSurroundingCells<T extends Cell>(List<List<Cell>> state, int habitatWidth, int habitatHeight, int x, int y, [bool Function(T)? test]) {
+    List<Coord> cells = [];
+    for(int i = -1; i <= 1; i++) {
+      for(int j = -1; j <= 1; j++) {
+        if(x + i < 0 || x + i >= habitatWidth || y + j < 0 || y + j >= habitatHeight) continue;
+        if(state[x + i][y + j] is T && (test == null || test(state[x + i][y + j] as T))) cells.add((x + i, y + j));
+      }
+    }
+    return cells;
   }
 }
 
@@ -88,7 +178,8 @@ class HabitatState with _$HabitatState {
     required int numberOfWolvesM,
     required int numberOfWolvesF,
     required int wolfLifetime,
-    @Default([]) List<LogEntry> logs
+    @Default([]) List<LogEntry> logs,
+    @Default(false) bool overpopulation
   }) = _HabitatState;
 
   factory HabitatState.empty() => HabitatState(cells: [[EmptyCell()]], width: 1, height: 1, numberOfRabbits: 0, numberOfWolvesM: 0, numberOfWolvesF: 0, wolfLifetime: 0);
@@ -98,6 +189,7 @@ class HabitatState with _$HabitatState {
   int get rabbits => cells.expand((e) => e).whereType<Rabbit>().length;
   int get wolvesM => cells.expand((e) => e).whereType<Wolf>().where((e) => e.gender == Gender.male).length;
   int get wolvesF => cells.expand((e) => e).whereType<Wolf>().where((e) => e.gender == Gender.female).length;
+  int get wolves => wolvesM + wolvesF;
 }
 
 class LogEntry {
@@ -106,6 +198,8 @@ class LogEntry {
   final int rabbits;
   final int wolves;
 }
+
+typedef Coord = (int, int);
 
 abstract class Cell {}
 
@@ -117,8 +211,8 @@ abstract class Animal extends Cell {}
 class Wolf extends Animal with _$Wolf {
   const factory Wolf({
     required Gender gender,
-    @Default(0) int age,
-    @Default(0) double hunger,
+    @Default(0) int hunger,
+    @Default(false) bool reproductionBlocked
   }) = _Wolf;
 }
 
