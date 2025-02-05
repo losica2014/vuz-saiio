@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:saiio_lab/lab3/page.dart';
 
 import 'lab1/page.dart';
 import 'lab2/page.dart';
@@ -26,6 +27,7 @@ class MyApp extends StatelessWidget {
         '/': (context) => const HomePage(),
         '/lab1': (context) => const HabitatPage(),
         '/lab2': (context) => const PumpStationPage(),
+        '/lab3': (context) => const BuildingPage(),
       },
     );
   }
@@ -66,6 +68,10 @@ class HomePage extends StatelessWidget {
                   FilledButton.tonal(
                     onPressed: () => Navigator.pushNamed(context, '/lab2'),
                     child: Text("Лабораторная работа 2"),
+                  ),
+                  FilledButton.tonal(
+                    onPressed: () => Navigator.pushNamed(context, '/lab3'),
+                    child: Text("Лабораторная работа 3"),
                   ),
                 ],
               ),
