@@ -32,25 +32,29 @@ class Elevator extends Cubit<ElevatorState> {
     switch(state.mode) {
       case ElevatorMode.idle:
         if(!state.hasAnyTasksInDirection) break;
-        print("Переход в режим движения");
+        print("Переход в режим движения до ближайшего вызова (${state.nearestStopInDirection})");
         emit(state.copyWith(mode: ElevatorMode.travelling, direction: state.nearestStopInDirection! > state.pos ? Direction.up : Direction.down));
         break;
       case ElevatorMode.travelling:
         int targetFloor;
-        if(!state.hasAnyTasksInDirection) {
+        int? reversingFloor = switch(state.direction) {Direction.up => state.callsDown.last, Direction.down => state.callsUp.last, _ => null};
+        if(!state.hasAnyTasksInDirection || state.direction == Direction.up && reversingFloor! < state.pos - 0.2 || state.direction == Direction.down && reversingFloor! > state.pos + 0.2) {
           // Продолжить движение до ближайшего этажа
-          targetFloor = state.pos.ceil();
+          targetFloor = state.direction == Direction.up ? state.pos.ceil() : state.pos.floor();
         } else {
           // Продолжить движение до ближайшего запрошенного этажа
           targetFloor = state.nearestStopInDirection!;
         }
-        if(state.isOnFloor && (state.currentFloor - targetFloor).abs() < 0.1) {
+        if(state.isOnFloor && (state.currentFloor - targetFloor).abs() < 0.2) {
           print("Прибыл на этаж $targetFloor, открываем двери");
+          bool isLastTask = state.stopsInDirection.difference({targetFloor, reversingFloor}).isEmpty;
+          Direction? newDirection = isLastTask ? null : state.direction;
           emit(state.copyWith(
+            pos: targetFloor.toDouble(),
             mode: ElevatorMode.openingDoors,
             requestedStops: state.requestedStops.difference({targetFloor}),
-            callsUp: state.direction == Direction.up ? state.callsUp.difference({targetFloor}) : state.callsUp,
-            callsDown: state.direction == Direction.down ? state.callsDown.difference({targetFloor}) : state.callsDown
+            callsUp: newDirection == Direction.up || newDirection == null ? state.callsUp.difference({targetFloor}) : state.callsUp,
+            callsDown: newDirection == Direction.down ? state.callsDown.difference({targetFloor}) : state.callsDown
           ));
         } else {
           emit(state.copyWith(pos: state.pos + (state.direction == Direction.up ? 0.1 : -0.1)));
@@ -106,6 +110,12 @@ class Elevator extends Cubit<ElevatorState> {
   void callDown(int floor) => emit(state.copyWith(callsDown: {...state.callsDown, floor}));
   void requestStop(int floor) => emit(state.copyWith(requestedStops: {...state.requestedStops, floor}));
 
+  // @override
+  // void emit(ElevatorState state) {
+  //   print(state);
+  //   super.emit(state);
+  // }
+
   @override
   Future<void> close() {
     stopSimulation();
@@ -138,14 +148,10 @@ class ElevatorState with _$ElevatorState {
 
   // bool get hasAnyCalls => callsUp.isNotEmpty || callsDown.isNotEmpty;
   // bool get hasAnyTasks => hasAnyCalls || requestedStops.isNotEmpty;
-  bool get hasAnyTasksInDirection => switch(direction) {
-    Direction.up => stopsUp.isNotEmpty,
-    Direction.down => stopsDown.isNotEmpty,
-    _ => stopsUp.isNotEmpty || stopsDown.isNotEmpty
-  };
+  bool get hasAnyTasksInDirection => stopsInDirection.isNotEmpty;
 
-  Set<int> get stopsDown => SplayTreeSet.from([...callsDown.where((floor) => floor <= pos), ...requestedStops.where((floor) => floor <= pos)]);
-  Set<int> get stopsUp => SplayTreeSet.from([...callsUp.where((floor) => floor >= pos), ...requestedStops.where((floor) => floor >= pos)]);
+  Set<int> get stopsDown => SplayTreeSet.from([...callsDown.where((floor) => floor <= pos), ...requestedStops.where((floor) => floor <= pos), if(callsUp.isNotEmpty) callsUp.first]);
+  Set<int> get stopsUp => SplayTreeSet.from([...callsUp.where((floor) => floor >= pos), ...requestedStops.where((floor) => floor >= pos), if(callsDown.isNotEmpty) callsDown.last]);
   Set<int> get stopsInDirection => switch(direction) {
     Direction.up => stopsUp,
     Direction.down => stopsDown,

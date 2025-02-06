@@ -62,7 +62,13 @@ class _BuildingPageState extends State<BuildingPage> {
                   child: ListView(
                     children: [
                       Text("В процессе разработки..."),
+                      Text("Текущее состояние: ${state.mode}"),
                       Text("Текущее положение: ${state.pos}"),
+                      Text("Направление движения: ${state.direction}"),
+                      Text("Вызовы вверх: ${state.callsUp}"),
+                      Text("Вызовы вниз: ${state.callsDown}"),
+                      Text("Запланированные остановки: ${state.stopsInDirection}"),
+                      Text("Запрошенные остановки: ${state.requestedStops}"),
                       Row(
                         spacing: 8,
                         children: [
