@@ -11,18 +11,16 @@ final initialState = ElevatorState(
   mode: ElevatorMode.idle,
   pos: 1,
   floors: 10,
-  callsUp: {},
-  callsDown: {},
-  requestedStops: {},
-  doorsPos: 1
+  callsUp: SplayTreeSet(),
+  callsDown: SplayTreeSet(),
+  requestedStops: SplayTreeSet(),
+  doorsPos: 0
 );
 
 class Elevator extends Cubit<ElevatorState> {
   Timer? _timer;
 
-  Elevator() : super(initialState) {
-    // startSimulation();
-  }
+  Elevator() : super(initialState);
 
   void _tick() {
     if(isClosed) {
@@ -33,41 +31,38 @@ class Elevator extends Cubit<ElevatorState> {
       case ElevatorMode.idle:
         if(!state.hasAnyTasksInDirection) break;
         print("Переход в режим движения до ближайшего вызова (${state.nearestStopInDirection})");
-        emit(state.copyWith(mode: ElevatorMode.travelling, direction: state.nearestStopInDirection! > state.pos ? Direction.up : Direction.down));
+        emit(state.copyWith(mode: ElevatorMode.travelling, direction: (state.nearestStopInDirection ?? state.nearestStartCall)! > state.pos ? Direction.up : Direction.down));
         break;
+      
       case ElevatorMode.travelling:
-        int targetFloor;
-        int? reversingFloor = switch(state.direction) {Direction.up => state.callsDown.last, Direction.down => state.callsUp.last, _ => null};
-        if(!state.hasAnyTasksInDirection || state.direction == Direction.up && reversingFloor! < state.pos - 0.2 || state.direction == Direction.down && reversingFloor! > state.pos + 0.2) {
-          // Продолжить движение до ближайшего этажа
-          targetFloor = state.direction == Direction.up ? state.pos.ceil() : state.pos.floor();
-        } else {
-          // Продолжить движение до ближайшего запрошенного этажа
-          targetFloor = state.nearestStopInDirection!;
-        }
-        if(state.isOnFloor && (state.currentFloor - targetFloor).abs() < 0.2) {
-          print("Прибыл на этаж $targetFloor, открываем двери");
-          bool isLastTask = state.stopsInDirection.difference({targetFloor, reversingFloor}).isEmpty;
-          Direction? newDirection = isLastTask ? null : state.direction;
+        int reversingFloor = switch(state.direction) {Direction.up => state.callsDown.lastOrNull ?? state.pos.ceil(), Direction.down => state.callsUp.firstOrNull ?? state.pos.floor(), _ => state.pos.round()}!;
+
+        if(state.isOnFloor && (state.stopsInDirection.contains(state.currentFloor) || state.stopsInDirection.isEmpty && state.nearestStartCall == state.currentFloor)) {
+          print("Прибыл на этаж ${state.currentFloor}, открываем двери");
           emit(state.copyWith(
-            pos: targetFloor.toDouble(),
+            pos: state.currentFloor.toDouble(),
             mode: ElevatorMode.openingDoors,
-            requestedStops: state.requestedStops.difference({targetFloor}),
-            callsUp: newDirection == Direction.up || newDirection == null ? state.callsUp.difference({targetFloor}) : state.callsUp,
-            callsDown: newDirection == Direction.down ? state.callsDown.difference({targetFloor}) : state.callsDown
+            requestedStops: SplayTreeSet.from(state.requestedStops.difference({state.currentFloor})),
+            callsUp: state.direction == Direction.up || state.currentFloor == reversingFloor ? SplayTreeSet.from(state.callsUp.difference({state.currentFloor})) : state.callsUp,
+            callsDown: state.direction == Direction.down || state.currentFloor == reversingFloor ? SplayTreeSet.from(state.callsDown.difference({state.currentFloor})) : state.callsDown
           ));
+        } else if(state.isOnFloor && !state.hasAnyTasksInDirection && state.currentFloor == reversingFloor) {
+          print("Прибыл на этаж ${state.currentFloor}, ждём");
+          emit(state.copyWith(mode: ElevatorMode.idle, direction: null));
         } else {
           emit(state.copyWith(pos: state.pos + (state.direction == Direction.up ? 0.1 : -0.1)));
         }
         break;
+      
       case ElevatorMode.openingDoors:
         if(state.areDoorsOpened) {
           print("Двери открыты, ждём");
-          emit(state.copyWith(mode: ElevatorMode.waiting));
+          emit(state.copyWith(mode: ElevatorMode.waiting, doorsPos: 1));
         } else {
           emit(state.copyWith(doorsPos: state.doorsPos + 0.1));
         }
         break;
+      
       case ElevatorMode.waiting:
         switch(state.doorsTimer) {
           case null:
@@ -82,13 +77,14 @@ class Elevator extends Cubit<ElevatorState> {
             break;
         }
         break;
+      
       case ElevatorMode.closingDoors:
         if(state.areDoorsClosed && !state.hasAnyTasksInDirection) {
           print("Двери закрыты. Вызовов нет, ждём");
-          emit(state.copyWith(mode: ElevatorMode.idle, direction: null));
+          emit(state.copyWith(mode: ElevatorMode.idle, direction: null, doorsPos: 0));
         } else if(state.areDoorsClosed) {
           print("Двери закрыты, продолжаем движение");
-          emit(state.copyWith(mode: ElevatorMode.travelling));
+          emit(state.copyWith(mode: ElevatorMode.travelling, doorsPos: 0));
         } else {
           emit(state.copyWith(doorsPos: state.doorsPos - 0.1));
         }
@@ -106,15 +102,9 @@ class Elevator extends Cubit<ElevatorState> {
     _timer?.cancel();
   }
 
-  void callUp(int floor) => emit(state.copyWith(callsUp: {...state.callsUp, floor}));
-  void callDown(int floor) => emit(state.copyWith(callsDown: {...state.callsDown, floor}));
-  void requestStop(int floor) => emit(state.copyWith(requestedStops: {...state.requestedStops, floor}));
-
-  // @override
-  // void emit(ElevatorState state) {
-  //   print(state);
-  //   super.emit(state);
-  // }
+  void callUp(int floor) => emit(state.copyWith(callsUp: SplayTreeSet.from({...state.callsUp, floor})));
+  void callDown(int floor) => emit(state.copyWith(callsDown: SplayTreeSet.from({...state.callsDown, floor})));
+  void requestStop(int floor) => emit(state.copyWith(requestedStops: SplayTreeSet.from({...state.requestedStops, floor})));
 
   @override
   Future<void> close() {
@@ -130,9 +120,9 @@ class ElevatorState with _$ElevatorState {
     Direction? direction,
     required double pos,
     required int floors,
-    required Set<int> callsUp,
-    required Set<int> callsDown,
-    required Set<int> requestedStops,
+    required SplayTreeSet<int> callsUp,
+    required SplayTreeSet<int> callsDown,
+    required SplayTreeSet<int> requestedStops,
     required double doorsPos,
     double? doorsTimer
   }) = _ElevatorState;
@@ -146,22 +136,24 @@ class ElevatorState with _$ElevatorState {
   bool get areDoorsClosed => doorsPos <= 0;
   bool get areDoorsMoving => !areDoorsOpened && !areDoorsClosed;
 
-  // bool get hasAnyCalls => callsUp.isNotEmpty || callsDown.isNotEmpty;
-  // bool get hasAnyTasks => hasAnyCalls || requestedStops.isNotEmpty;
   bool get hasAnyTasksInDirection => stopsInDirection.isNotEmpty;
 
-  Set<int> get stopsDown => SplayTreeSet.from([...callsDown.where((floor) => floor <= pos), ...requestedStops.where((floor) => floor <= pos), if(callsUp.isNotEmpty) callsUp.first]);
-  Set<int> get stopsUp => SplayTreeSet.from([...callsUp.where((floor) => floor >= pos), ...requestedStops.where((floor) => floor >= pos), if(callsDown.isNotEmpty) callsDown.last]);
-  Set<int> get stopsInDirection => switch(direction) {
+  SplayTreeSet<int> get stopsUp => SplayTreeSet.from([...callsUp.where((floor) => floor >= currentFloor), ...requestedStops.where((floor) => floor >= currentFloor)]);
+  SplayTreeSet<int> get stopsDown => SplayTreeSet.from([...callsDown.where((floor) => floor <= currentFloor), ...requestedStops.where((floor) => floor <= currentFloor)]);
+  SplayTreeSet<int> get stopsAll => SplayTreeSet.from([...callsUp, ...callsDown, ...requestedStops]);
+  SplayTreeSet<int> get stopsInDirection => switch(direction) {
     Direction.up => stopsUp,
     Direction.down => stopsDown,
-    _ => SplayTreeSet.from([...callsUp, ...callsDown, ...requestedStops])
+    _ => stopsAll
   };
+
+  int? get nearestStopRequest => stopsAll.fold(null, (min, stop) => (min == null || (stop - currentFloor).abs() < (min - currentFloor).abs()) ? stop : min);
+  int? get nearestStartCall => (callsUp.isNotEmpty && callsDown.isNotEmpty) ? ((callsUp.first - currentFloor).abs() < (callsDown.last - currentFloor).abs() ? callsUp.firstOrNull : callsDown.lastOrNull) : callsUp.firstOrNull ?? callsDown.lastOrNull;
 
   int? get nearestStopInDirection => switch(direction) {
     Direction.up => stopsUp.firstOrNull,
     Direction.down => stopsDown.lastOrNull,
-    _ => stopsInDirection.fold(null, (min, stop) => (min == null || (stop - pos).abs() < (min - pos).abs()) ? stop : min)
+    _ => nearestStopRequest ?? nearestStartCall
   };
 }
 

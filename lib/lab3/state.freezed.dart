@@ -20,9 +20,9 @@ mixin _$ElevatorState {
   Direction? get direction => throw _privateConstructorUsedError;
   double get pos => throw _privateConstructorUsedError;
   int get floors => throw _privateConstructorUsedError;
-  Set<int> get callsUp => throw _privateConstructorUsedError;
-  Set<int> get callsDown => throw _privateConstructorUsedError;
-  Set<int> get requestedStops => throw _privateConstructorUsedError;
+  SplayTreeSet<int> get callsUp => throw _privateConstructorUsedError;
+  SplayTreeSet<int> get callsDown => throw _privateConstructorUsedError;
+  SplayTreeSet<int> get requestedStops => throw _privateConstructorUsedError;
   double get doorsPos => throw _privateConstructorUsedError;
   double? get doorsTimer => throw _privateConstructorUsedError;
 
@@ -44,9 +44,9 @@ abstract class $ElevatorStateCopyWith<$Res> {
       Direction? direction,
       double pos,
       int floors,
-      Set<int> callsUp,
-      Set<int> callsDown,
-      Set<int> requestedStops,
+      SplayTreeSet<int> callsUp,
+      SplayTreeSet<int> callsDown,
+      SplayTreeSet<int> requestedStops,
       double doorsPos,
       double? doorsTimer});
 }
@@ -96,15 +96,15 @@ class _$ElevatorStateCopyWithImpl<$Res, $Val extends ElevatorState>
       callsUp: null == callsUp
           ? _value.callsUp
           : callsUp // ignore: cast_nullable_to_non_nullable
-              as Set<int>,
+              as SplayTreeSet<int>,
       callsDown: null == callsDown
           ? _value.callsDown
           : callsDown // ignore: cast_nullable_to_non_nullable
-              as Set<int>,
+              as SplayTreeSet<int>,
       requestedStops: null == requestedStops
           ? _value.requestedStops
           : requestedStops // ignore: cast_nullable_to_non_nullable
-              as Set<int>,
+              as SplayTreeSet<int>,
       doorsPos: null == doorsPos
           ? _value.doorsPos
           : doorsPos // ignore: cast_nullable_to_non_nullable
@@ -130,9 +130,9 @@ abstract class _$$ElevatorStateImplCopyWith<$Res>
       Direction? direction,
       double pos,
       int floors,
-      Set<int> callsUp,
-      Set<int> callsDown,
-      Set<int> requestedStops,
+      SplayTreeSet<int> callsUp,
+      SplayTreeSet<int> callsDown,
+      SplayTreeSet<int> requestedStops,
       double doorsPos,
       double? doorsTimer});
 }
@@ -178,17 +178,17 @@ class __$$ElevatorStateImplCopyWithImpl<$Res>
           : floors // ignore: cast_nullable_to_non_nullable
               as int,
       callsUp: null == callsUp
-          ? _value._callsUp
+          ? _value.callsUp
           : callsUp // ignore: cast_nullable_to_non_nullable
-              as Set<int>,
+              as SplayTreeSet<int>,
       callsDown: null == callsDown
-          ? _value._callsDown
+          ? _value.callsDown
           : callsDown // ignore: cast_nullable_to_non_nullable
-              as Set<int>,
+              as SplayTreeSet<int>,
       requestedStops: null == requestedStops
-          ? _value._requestedStops
+          ? _value.requestedStops
           : requestedStops // ignore: cast_nullable_to_non_nullable
-              as Set<int>,
+              as SplayTreeSet<int>,
       doorsPos: null == doorsPos
           ? _value.doorsPos
           : doorsPos // ignore: cast_nullable_to_non_nullable
@@ -209,15 +209,12 @@ class _$ElevatorStateImpl extends _ElevatorState {
       this.direction,
       required this.pos,
       required this.floors,
-      required final Set<int> callsUp,
-      required final Set<int> callsDown,
-      required final Set<int> requestedStops,
+      required this.callsUp,
+      required this.callsDown,
+      required this.requestedStops,
       required this.doorsPos,
       this.doorsTimer})
-      : _callsUp = callsUp,
-        _callsDown = callsDown,
-        _requestedStops = requestedStops,
-        super._();
+      : super._();
 
   @override
   final ElevatorMode mode;
@@ -227,30 +224,12 @@ class _$ElevatorStateImpl extends _ElevatorState {
   final double pos;
   @override
   final int floors;
-  final Set<int> _callsUp;
   @override
-  Set<int> get callsUp {
-    if (_callsUp is EqualUnmodifiableSetView) return _callsUp;
-    // ignore: implicit_dynamic_type
-    return EqualUnmodifiableSetView(_callsUp);
-  }
-
-  final Set<int> _callsDown;
+  final SplayTreeSet<int> callsUp;
   @override
-  Set<int> get callsDown {
-    if (_callsDown is EqualUnmodifiableSetView) return _callsDown;
-    // ignore: implicit_dynamic_type
-    return EqualUnmodifiableSetView(_callsDown);
-  }
-
-  final Set<int> _requestedStops;
+  final SplayTreeSet<int> callsDown;
   @override
-  Set<int> get requestedStops {
-    if (_requestedStops is EqualUnmodifiableSetView) return _requestedStops;
-    // ignore: implicit_dynamic_type
-    return EqualUnmodifiableSetView(_requestedStops);
-  }
-
+  final SplayTreeSet<int> requestedStops;
   @override
   final double doorsPos;
   @override
@@ -271,11 +250,10 @@ class _$ElevatorStateImpl extends _ElevatorState {
                 other.direction == direction) &&
             (identical(other.pos, pos) || other.pos == pos) &&
             (identical(other.floors, floors) || other.floors == floors) &&
-            const DeepCollectionEquality().equals(other._callsUp, _callsUp) &&
+            const DeepCollectionEquality().equals(other.callsUp, callsUp) &&
+            const DeepCollectionEquality().equals(other.callsDown, callsDown) &&
             const DeepCollectionEquality()
-                .equals(other._callsDown, _callsDown) &&
-            const DeepCollectionEquality()
-                .equals(other._requestedStops, _requestedStops) &&
+                .equals(other.requestedStops, requestedStops) &&
             (identical(other.doorsPos, doorsPos) ||
                 other.doorsPos == doorsPos) &&
             (identical(other.doorsTimer, doorsTimer) ||
@@ -289,9 +267,9 @@ class _$ElevatorStateImpl extends _ElevatorState {
       direction,
       pos,
       floors,
-      const DeepCollectionEquality().hash(_callsUp),
-      const DeepCollectionEquality().hash(_callsDown),
-      const DeepCollectionEquality().hash(_requestedStops),
+      const DeepCollectionEquality().hash(callsUp),
+      const DeepCollectionEquality().hash(callsDown),
+      const DeepCollectionEquality().hash(requestedStops),
       doorsPos,
       doorsTimer);
 
@@ -310,9 +288,9 @@ abstract class _ElevatorState extends ElevatorState {
       final Direction? direction,
       required final double pos,
       required final int floors,
-      required final Set<int> callsUp,
-      required final Set<int> callsDown,
-      required final Set<int> requestedStops,
+      required final SplayTreeSet<int> callsUp,
+      required final SplayTreeSet<int> callsDown,
+      required final SplayTreeSet<int> requestedStops,
       required final double doorsPos,
       final double? doorsTimer}) = _$ElevatorStateImpl;
   const _ElevatorState._() : super._();
@@ -326,11 +304,11 @@ abstract class _ElevatorState extends ElevatorState {
   @override
   int get floors;
   @override
-  Set<int> get callsUp;
+  SplayTreeSet<int> get callsUp;
   @override
-  Set<int> get callsDown;
+  SplayTreeSet<int> get callsDown;
   @override
-  Set<int> get requestedStops;
+  SplayTreeSet<int> get requestedStops;
   @override
   double get doorsPos;
   @override

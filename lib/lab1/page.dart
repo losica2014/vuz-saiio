@@ -78,7 +78,7 @@ class _HabitatPageState extends State<HabitatPage> {
                       delegate: TableCellBuilderDelegate(
                         rowCount: state.height,
                         columnCount: state.width,
-                        cellBuilder: (context, vicinity) => _buildCell(context, state.cells[vicinity.xIndex][vicinity.yIndex]),
+                        cellBuilder: (context, vicinity) => _buildCell(context, state.cells[vicinity.xIndex][vicinity.yIndex], side >= 10),
                         columnBuilder: (index) => TableSpan(
                           extent: FixedSpanExtent(side),
                         ),
@@ -233,7 +233,7 @@ class _HabitatPageState extends State<HabitatPage> {
     );
   }
 
-  TableViewCell _buildCell(BuildContext context, Cell cell) {
+  TableViewCell _buildCell(BuildContext context, Cell cell, bool enableText) {
     return TableViewCell(
       child: Container(
         color: switch(cell) {
@@ -243,7 +243,7 @@ class _HabitatPageState extends State<HabitatPage> {
           _ => Colors.black
         },
         alignment: Alignment.center,
-        child: (cell is Wolf) ? Text(cell.hunger.toString(), style: TextStyle(color: Colors.white)) : null,
+        child: (cell is Wolf && enableText) ? Text(cell.hunger.toString(), style: TextStyle(color: Colors.white)) : null,
       ),
     );
   }

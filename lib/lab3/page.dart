@@ -40,9 +40,10 @@ class _BuildingPageState extends State<BuildingPage> {
           builder: (context, state) {
             return Row(
               children: [
-                Flexible(
+                Expanded(
                   child: SingleChildScrollView(
                     child: Stack(
+                      alignment: Alignment.centerRight,
                       children: [
                         Column(
                           spacing: 20,
@@ -58,10 +59,10 @@ class _BuildingPageState extends State<BuildingPage> {
                     ),
                   ),
                 ),
-                Flexible(
+                Expanded(
                   child: ListView(
+                    padding: const EdgeInsets.all(16),
                     children: [
-                      Text("В процессе разработки..."),
                       Text("Текущее состояние: ${state.mode}"),
                       Text("Текущее положение: ${state.pos}"),
                       Text("Направление движения: ${state.direction}"),
@@ -88,6 +89,17 @@ class _BuildingPageState extends State<BuildingPage> {
                           ),
                         ]
                       ),
+                      SizedBox(height: 8),
+                      Wrap(
+                        spacing: 10,
+                        runSpacing: 10,
+                        children: [
+                          for(int i = 1; i <= elevator.state.floors; i++) FilledButton.tonal(
+                            onPressed: () => elevator.requestStop(i),
+                            child: Text("$i этаж"),
+                          )
+                        ],
+                      )
                     ],
                   ),
                 ),
