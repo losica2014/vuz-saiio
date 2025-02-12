@@ -99,33 +99,36 @@ class Habitat extends Cubit<HabitatState> {
             if(cell.hunger == state.wolfLifetime) {
               newState[i][j] = EmptyCell();
               continue;
-            } else if(food.isNotEmpty && cell.hunger >= state.wolfLifetime / 2) {
+            }
+            
+            if(food.isNotEmpty && cell.hunger >= state.wolfLifetime / 2) {
               final selectedCell = food[_rand.nextInt(food.length)];
               final (x, y) = selectedCell;
               newState[x][y] = cell.copyWith(hunger: 0);
               newState[i][j] = EmptyCell();
               continue;
+            }
+            
+            List<Coord> mates = _getSurroundingCells<Wolf>(newState, state.width, state.height, i, j, (w) => w.gender == Gender.female);
+            List<Coord> free = _getSurroundingCells<EmptyCell>(newState, state.width, state.height, i, j);
+
+            if(cell.gender == Gender.male && mates.isNotEmpty && cell.hunger <= state.wolfLifetime / 4 && free.isNotEmpty) {
+              final selectedCell = free[_rand.nextInt(free.length)];
+              final (x, y) = selectedCell;
+              newState[x][y] = cell.copyWith(gender: _rand.nextBool() ? Gender.male : Gender.female);
+              newState[i][j] = cell.copyWith(hunger: cell.hunger + 1);
+              continue;
+            }
+
+            if(free.isNotEmpty) {
+              final selectedCell = free[_rand.nextInt(free.length)];
+              final (x, y) = selectedCell;
+              newState[x][y] = cell.copyWith(hunger: cell.hunger + 1);
+              newState[i][j] = EmptyCell();
+              continue;
             } else {
-              List<Coord> mates = _getSurroundingCells<Wolf>(newState, state.width, state.height, i, j, (w) => w.gender == Gender.female);
-              List<Coord> free = _getSurroundingCells<EmptyCell>(newState, state.width, state.height, i, j);
-              if(cell.gender == Gender.male && mates.isNotEmpty && cell.hunger <= state.wolfLifetime / 4 && free.isNotEmpty) {
-                final selectedCell = free[_rand.nextInt(free.length)];
-                final (x, y) = selectedCell;
-                newState[x][y] = cell.copyWith(gender: _rand.nextBool() ? Gender.male : Gender.female);
-                free.remove(selectedCell);
-                newState[i][j] = cell.copyWith(hunger: cell.hunger + 1);
-                continue;
-              }
-              if(free.isNotEmpty) {
-                final selectedCell = free[_rand.nextInt(free.length)];
-                final (x, y) = selectedCell;
-                newState[x][y] = cell.copyWith(hunger: cell.hunger + 1);
-                newState[i][j] = EmptyCell();
-                continue;
-              } else {
-                newState[i][j] = cell.copyWith(hunger: cell.hunger + 1);
-                continue;
-              }
+              newState[i][j] = cell.copyWith(hunger: cell.hunger + 1);
+              continue;
             }
           }
         }

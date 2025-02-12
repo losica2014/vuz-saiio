@@ -1,6 +1,5 @@
 import 'dart:async';
 import 'dart:collection';
-import 'dart:math';
 
 import 'package:bloc/bloc.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
@@ -22,11 +21,12 @@ class Elevator extends Cubit<ElevatorState> {
 
   Elevator() : super(initialState);
 
-  void _tick() {
+  void stepState() {
     if(isClosed) {
       stopSimulation();
       return;
     }
+
     switch(state.mode) {
       case ElevatorMode.idle:
         if(!state.hasAnyTasksInDirection) break;
@@ -35,7 +35,11 @@ class Elevator extends Cubit<ElevatorState> {
         break;
       
       case ElevatorMode.travelling:
-        int reversingFloor = switch(state.direction) {Direction.up => state.callsDown.lastOrNull ?? state.pos.ceil(), Direction.down => state.callsUp.firstOrNull ?? state.pos.floor(), _ => state.pos.round()}!;
+        int reversingFloor = switch(state.direction) {
+          Direction.up => state.callsDown.lastOrNull ?? state.pos.ceil(),
+          Direction.down => state.callsUp.firstOrNull ?? state.pos.floor(),
+          _ => state.pos.round()
+        };
 
         if(state.isOnFloor && (state.stopsInDirection.contains(state.currentFloor) || state.stopsInDirection.isEmpty && state.nearestStartCall == state.currentFloor)) {
           print("Прибыл на этаж ${state.currentFloor}, открываем двери");
@@ -93,10 +97,8 @@ class Elevator extends Cubit<ElevatorState> {
   }
 
   void startSimulation() {
-    _timer = Timer.periodic(Duration(milliseconds: 40), (_) => _tick());
+    _timer = Timer.periodic(Duration(milliseconds: 40), (_) => stepState());
   }
-
-  void stepState() => _tick();
 
   void stopSimulation() {
     _timer?.cancel();
@@ -134,7 +136,6 @@ class ElevatorState with _$ElevatorState {
 
   bool get areDoorsOpened => doorsPos >= 1;
   bool get areDoorsClosed => doorsPos <= 0;
-  bool get areDoorsMoving => !areDoorsOpened && !areDoorsClosed;
 
   bool get hasAnyTasksInDirection => stopsInDirection.isNotEmpty;
 

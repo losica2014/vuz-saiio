@@ -2,11 +2,9 @@ import 'dart:math';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter/src/rendering/viewport_offset.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:material_symbols_icons/symbols.dart';
 import 'package:syncfusion_flutter_charts/charts.dart';
-import 'package:syncfusion_flutter_charts/sparkcharts.dart';
 import 'package:two_dimensional_scrollables/two_dimensional_scrollables.dart';
 
 import 'state.dart';
@@ -72,23 +70,21 @@ class _HabitatPageState extends State<HabitatPage> {
           children: [
             Expanded(
               child: BlocBuilder<Habitat, HabitatState>(
-                builder: (context, state) {
-                  return Center(
-                    child: TableView(
-                      delegate: TableCellBuilderDelegate(
-                        rowCount: state.height,
-                        columnCount: state.width,
-                        cellBuilder: (context, vicinity) => _buildCell(context, state.cells[vicinity.xIndex][vicinity.yIndex], side >= 10),
-                        columnBuilder: (index) => TableSpan(
-                          extent: FixedSpanExtent(side),
-                        ),
-                        rowBuilder: (index) => TableSpan(
-                          extent: FixedSpanExtent(side),
-                        )
+                builder: (context, state) => Center(
+                  child: TableView(
+                    delegate: TableCellBuilderDelegate(
+                      rowCount: state.height,
+                      columnCount: state.width,
+                      cellBuilder: (context, vicinity) => _buildCell(context, state.cells[vicinity.xIndex][vicinity.yIndex], side >= 10),
+                      columnBuilder: (index) => TableSpan(
+                        extent: FixedSpanExtent(side),
                       ),
+                      rowBuilder: (index) => TableSpan(
+                        extent: FixedSpanExtent(side),
+                      )
                     ),
-                  );
-                }
+                  ),
+                )
               ),
             ),
             Flexible(
@@ -201,26 +197,24 @@ class _HabitatPageState extends State<HabitatPage> {
                       ),
                       BlocBuilder<Habitat, HabitatState>(
                         buildWhen: (previous, current) => previous.logs != current.logs,
-                        builder: (context, state) {
-                          return SfCartesianChart(
-                            series: [
-                              LineSeries<LogEntry, dynamic>(
-                                dataSource: state.logs,
-                                color: Colors.green,
-                                name: "Кролики",
-                                xValueMapper: (e, _) => e.step,
-                                yValueMapper: (e, _) => e.rabbits
-                              ),
-                              LineSeries<LogEntry, dynamic>(
-                                dataSource: state.logs,
-                                color: Colors.red,
-                                name: "Волки",
-                                xValueMapper: (e, _) => e.step,
-                                yValueMapper: (e, _) => e.wolves
-                              )
-                            ],
-                          );
-                        }
+                        builder: (context, state) => SfCartesianChart(
+                          series: [
+                            LineSeries<LogEntry, dynamic>(
+                              dataSource: state.logs,
+                              color: Colors.green,
+                              name: "Кролики",
+                              xValueMapper: (e, _) => e.step,
+                              yValueMapper: (e, _) => e.rabbits
+                            ),
+                            LineSeries<LogEntry, dynamic>(
+                              dataSource: state.logs,
+                              color: Colors.red,
+                              name: "Волки",
+                              xValueMapper: (e, _) => e.step,
+                              yValueMapper: (e, _) => e.wolves
+                            )
+                          ],
+                        )
                       )
                     ],
                   ),

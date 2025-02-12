@@ -37,21 +37,19 @@ class _PumpStationPageState extends State<PumpStationPage> {
           title: Text("Лабораторная работа 2"),
         ),
         body: BlocBuilder<PumpStation, PumpStationState>(
-          builder: (context, state) {
-            return Center(
-              child: Wrap(
-                direction: Axis.horizontal,
-                alignment: WrapAlignment.center,
-                spacing: 20,
-                runSpacing: 20,
-                children: [
-                  for(final pumpId in state.pumps.keys) Pump(id: pumpId),
-                  Reservoir(),
-                  Valve(),
-                ],
-              ),
-            );
-          }
+          builder: (context, state) => Center(
+            child: Wrap(
+              direction: Axis.horizontal,
+              alignment: WrapAlignment.center,
+              spacing: 20,
+              runSpacing: 20,
+              children: [
+                for(final pumpId in state.pumps.keys) Pump(id: pumpId),
+                Reservoir(),
+                Valve(),
+              ],
+            ),
+          )
         ),
       ),
     );

@@ -26,24 +26,22 @@ class Floor extends StatelessWidget {
             style: TextStyle(fontSize: 48),
           ),
           BlocBuilder<Elevator, ElevatorState>(
-            builder: (context, state) {
-              return Column(
-                children: [
-                  IconButton(
-                    color: state.callsUp.contains(floorNumber) ? Colors.red : null,
-                    icon: Icon(Symbols.arrow_upward),
-                    onPressed: () =>
-                        context.read<Elevator>().callUp(floorNumber),
-                  ),
-                  IconButton(
-                    color: state.callsDown.contains(floorNumber) ? Colors.red : null,
-                    icon: Icon(Symbols.arrow_downward),
-                    onPressed: () =>
-                        context.read<Elevator>().callDown(floorNumber),
-                  ),
-                ],
-              );
-            },
+            builder: (context, state) => Column(
+              children: [
+                IconButton(
+                  color: state.callsUp.contains(floorNumber) ? Colors.red : null,
+                  icon: Icon(Symbols.arrow_upward),
+                  onPressed: () =>
+                      context.read<Elevator>().callUp(floorNumber),
+                ),
+                IconButton(
+                  color: state.callsDown.contains(floorNumber) ? Colors.red : null,
+                  icon: Icon(Symbols.arrow_downward),
+                  onPressed: () =>
+                      context.read<Elevator>().callDown(floorNumber),
+                ),
+              ],
+            ),
           )
         ],
       ),

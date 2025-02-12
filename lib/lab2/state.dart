@@ -22,7 +22,12 @@ class PumpStation extends Cubit<PumpStationState> {
     startSimulation();
   }
 
-  void _tick() {
+  void stepState() {
+    if(isClosed) {
+      stopSimulation();
+      return;
+    }
+
     int newReservoir = state.reservoir - state.valveSpeed + state.pumps.values.fold(0, (prev, pump) => prev + (pump.mode == PumpMode.running ? 2 : 0));
     if(newReservoir > state.reservoirSize) newReservoir = state.reservoirSize;
     if(newReservoir < 0) newReservoir = 0;
@@ -96,17 +101,11 @@ class PumpStation extends Cubit<PumpStationState> {
   }
 
   void startSimulation() {
-    _timer = Timer.periodic(Duration(milliseconds: 20), (_) => _tick());
+    _timer = Timer.periodic(Duration(milliseconds: 20), (_) => stepState());
   }
 
   void stopSimulation() {
     _timer?.cancel();
-  }
-
-  void resetSimulation() {
-    stopSimulation();
-    emit(initialState);
-    startSimulation();
   }
 
   @override
