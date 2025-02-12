@@ -37,7 +37,7 @@ class PumpStation extends Cubit<PumpStationState> {
           pumpToRun: newState.pumps[pumpToRun]!.copyWith(mode: PumpMode.running)
         });
       }
-    } else if(state.reservoirPercentage >= 0.5 && state.pumpsRunning >= 2 || state.reservoirPercentage == 1 && state.pumpsRunning >= 1) {
+    } else if(state.reservoirPercentage == 1 && state.pumpsRunning >= 1) {
       int? pumpToStop = _choosePumpToStop();
       if(pumpToStop != null) {
         newState = newState.copyWith(pumps: {
