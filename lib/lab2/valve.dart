@@ -27,7 +27,7 @@ class Valve extends StatelessWidget {
               spacing: 10,
               children: [
                 Icon(Symbols.valve),
-                Text("Клапан", style: Theme.of(context).textTheme.titleMedium),
+                Text("Кран", style: Theme.of(context).textTheme.titleMedium),
               ],
             ),
             Text("Пропускная способность: ${(state.valveSpeed / 4 * 100).toInt()}%", textAlign: TextAlign.center,),

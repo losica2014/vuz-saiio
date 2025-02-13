@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:material_symbols_icons/material_symbols_icons.dart';
 
 import 'pump.dart';
 import 'reservoir.dart';
@@ -44,6 +45,28 @@ class _PumpStationPageState extends State<PumpStationPage> {
               spacing: 20,
               runSpacing: 20,
               children: [
+                Container(
+                  padding: EdgeInsets.all(16),
+                  height: 200,
+                  decoration: BoxDecoration(
+                    color: Colors.grey.shade300,
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Row(
+                        spacing: 10,
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(Symbols.timer),
+                          Text("Циклов симуляции", style: Theme.of(context).textTheme.titleMedium),
+                        ],
+                      ),
+                      Text(state.clock.toString()),
+                    ],
+                  )
+                ),
                 for(final pumpId in state.pumps.keys) Pump(id: pumpId),
                 Reservoir(),
                 Valve(),

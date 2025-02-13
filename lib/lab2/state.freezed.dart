@@ -16,6 +16,7 @@ final _privateConstructorUsedError = UnsupportedError(
 
 /// @nodoc
 mixin _$PumpStationState {
+  int get clock => throw _privateConstructorUsedError;
   int get reservoir => throw _privateConstructorUsedError;
   int get reservoirSize => throw _privateConstructorUsedError;
   Map<int, PumpState> get pumps => throw _privateConstructorUsedError;
@@ -35,7 +36,8 @@ abstract class $PumpStationStateCopyWith<$Res> {
       _$PumpStationStateCopyWithImpl<$Res, PumpStationState>;
   @useResult
   $Res call(
-      {int reservoir,
+      {int clock,
+      int reservoir,
       int reservoirSize,
       Map<int, PumpState> pumps,
       int valveSpeed});
@@ -56,12 +58,17 @@ class _$PumpStationStateCopyWithImpl<$Res, $Val extends PumpStationState>
   @pragma('vm:prefer-inline')
   @override
   $Res call({
+    Object? clock = null,
     Object? reservoir = null,
     Object? reservoirSize = null,
     Object? pumps = null,
     Object? valveSpeed = null,
   }) {
     return _then(_value.copyWith(
+      clock: null == clock
+          ? _value.clock
+          : clock // ignore: cast_nullable_to_non_nullable
+              as int,
       reservoir: null == reservoir
           ? _value.reservoir
           : reservoir // ignore: cast_nullable_to_non_nullable
@@ -91,7 +98,8 @@ abstract class _$$PumpStationStateImplCopyWith<$Res>
   @override
   @useResult
   $Res call(
-      {int reservoir,
+      {int clock,
+      int reservoir,
       int reservoirSize,
       Map<int, PumpState> pumps,
       int valveSpeed});
@@ -110,12 +118,17 @@ class __$$PumpStationStateImplCopyWithImpl<$Res>
   @pragma('vm:prefer-inline')
   @override
   $Res call({
+    Object? clock = null,
     Object? reservoir = null,
     Object? reservoirSize = null,
     Object? pumps = null,
     Object? valveSpeed = null,
   }) {
     return _then(_$PumpStationStateImpl(
+      clock: null == clock
+          ? _value.clock
+          : clock // ignore: cast_nullable_to_non_nullable
+              as int,
       reservoir: null == reservoir
           ? _value.reservoir
           : reservoir // ignore: cast_nullable_to_non_nullable
@@ -140,13 +153,16 @@ class __$$PumpStationStateImplCopyWithImpl<$Res>
 
 class _$PumpStationStateImpl extends _PumpStationState {
   const _$PumpStationStateImpl(
-      {required this.reservoir,
+      {required this.clock,
+      required this.reservoir,
       required this.reservoirSize,
       required final Map<int, PumpState> pumps,
       required this.valveSpeed})
       : _pumps = pumps,
         super._();
 
+  @override
+  final int clock;
   @override
   final int reservoir;
   @override
@@ -164,7 +180,7 @@ class _$PumpStationStateImpl extends _PumpStationState {
 
   @override
   String toString() {
-    return 'PumpStationState(reservoir: $reservoir, reservoirSize: $reservoirSize, pumps: $pumps, valveSpeed: $valveSpeed)';
+    return 'PumpStationState(clock: $clock, reservoir: $reservoir, reservoirSize: $reservoirSize, pumps: $pumps, valveSpeed: $valveSpeed)';
   }
 
   @override
@@ -172,6 +188,7 @@ class _$PumpStationStateImpl extends _PumpStationState {
     return identical(this, other) ||
         (other.runtimeType == runtimeType &&
             other is _$PumpStationStateImpl &&
+            (identical(other.clock, clock) || other.clock == clock) &&
             (identical(other.reservoir, reservoir) ||
                 other.reservoir == reservoir) &&
             (identical(other.reservoirSize, reservoirSize) ||
@@ -182,7 +199,7 @@ class _$PumpStationStateImpl extends _PumpStationState {
   }
 
   @override
-  int get hashCode => Object.hash(runtimeType, reservoir, reservoirSize,
+  int get hashCode => Object.hash(runtimeType, clock, reservoir, reservoirSize,
       const DeepCollectionEquality().hash(_pumps), valveSpeed);
 
   /// Create a copy of PumpStationState
@@ -197,12 +214,15 @@ class _$PumpStationStateImpl extends _PumpStationState {
 
 abstract class _PumpStationState extends PumpStationState {
   const factory _PumpStationState(
-      {required final int reservoir,
+      {required final int clock,
+      required final int reservoir,
       required final int reservoirSize,
       required final Map<int, PumpState> pumps,
       required final int valveSpeed}) = _$PumpStationStateImpl;
   const _PumpStationState._() : super._();
 
+  @override
+  int get clock;
   @override
   int get reservoir;
   @override

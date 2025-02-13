@@ -6,6 +6,7 @@ import 'package:freezed_annotation/freezed_annotation.dart';
 part 'state.freezed.dart';
 
 final initialState = PumpStationState(
+  clock: 0,
   reservoir: 1000,
   reservoirSize: 1000,
   valveSpeed: 0,
@@ -53,6 +54,7 @@ class PumpStation extends Cubit<PumpStationState> {
     }
 
     newState = newState.copyWith(
+      clock: state.clock + 1,
       pumps: newState.pumps.map(
         (key, value) => MapEntry(
           key,
@@ -118,6 +120,7 @@ class PumpStation extends Cubit<PumpStationState> {
 @freezed
 class PumpStationState with _$PumpStationState {
   const factory PumpStationState({
+    required int clock,
     required int reservoir,
     required int reservoirSize,
     required Map<int, PumpState> pumps,
