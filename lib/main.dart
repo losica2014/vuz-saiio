@@ -3,6 +3,7 @@ import 'package:saiio_lab/lab3/page.dart';
 
 import 'lab1/page.dart';
 import 'lab2/page.dart';
+import 'lab4/page.dart';
 
 void main() {
   runApp(const MyApp());
@@ -28,6 +29,7 @@ class MyApp extends StatelessWidget {
         '/lab1': (context) => const HabitatPage(),
         '/lab2': (context) => const PumpStationPage(),
         '/lab3': (context) => const BuildingPage(),
+        '/lab4': (context) => const LPPPage(),
       },
     );
   }
@@ -72,6 +74,10 @@ class HomePage extends StatelessWidget {
                   FilledButton.tonal(
                     onPressed: () => Navigator.pushNamed(context, '/lab3'),
                     child: Text("Лабораторная работа 3"),
+                  ),
+                  FilledButton.tonal(
+                    onPressed: () => Navigator.pushNamed(context, '/lab4'),
+                    child: Text("Лабораторная работа 4"),
                   ),
                 ],
               ),
