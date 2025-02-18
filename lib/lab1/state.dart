@@ -63,12 +63,16 @@ class Habitat extends Cubit<HabitatState> {
   void stepState() {
     List<List<Cell>> newState = List.generate(state.width, (x) => List.generate(state.height, (y) => state.cells[x][y]));
 
+    List<Coord> processedCoords = [];
+
     bool overpopulation = false;
 
     try {
       for(int i = 0; i < state.width; i++) {
         for(int j = 0; j < state.height; j++) {
           final cell = state.cells[i][j];
+          if(processedCoords.contains((i, j))) continue;
+          processedCoords.add((i, j));
 
           if(cell is Rabbit) {
             List<Coord> surroundingCells = _getSurroundingCells<EmptyCell>(newState, state.width, state.height, i, j);
@@ -81,6 +85,7 @@ class Habitat extends Cubit<HabitatState> {
               final selectedCell = surroundingCells[_rand.nextInt(surroundingCells.length)];
               final (x, y) = selectedCell;
               newState[x][y] = Rabbit();
+              processedCoords.add((x, y));
               continue;
             }
 
@@ -89,6 +94,7 @@ class Habitat extends Cubit<HabitatState> {
               final (x, y) = selectedCell;
               newState[x][y] = Rabbit();
               newState[i][j] = EmptyCell();
+              processedCoords.add((x, y));
               continue;
             }
           }
@@ -106,6 +112,7 @@ class Habitat extends Cubit<HabitatState> {
               final (x, y) = selectedCell;
               newState[x][y] = cell.copyWith(hunger: 0);
               newState[i][j] = EmptyCell();
+              processedCoords.add((x, y));
               continue;
             }
             
@@ -117,6 +124,7 @@ class Habitat extends Cubit<HabitatState> {
               final (x, y) = selectedCell;
               newState[x][y] = cell.copyWith(gender: _rand.nextBool() ? Gender.male : Gender.female);
               newState[i][j] = cell.copyWith(hunger: cell.hunger + 1);
+              processedCoords.add((x, y));
               continue;
             }
 
@@ -125,6 +133,7 @@ class Habitat extends Cubit<HabitatState> {
               final (x, y) = selectedCell;
               newState[x][y] = cell.copyWith(hunger: cell.hunger + 1);
               newState[i][j] = EmptyCell();
+              processedCoords.add((x, y));
               continue;
             } else {
               newState[i][j] = cell.copyWith(hunger: cell.hunger + 1);
