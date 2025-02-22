@@ -1,11 +1,15 @@
+import 'dart:ui';
+
 import 'package:flutter/material.dart';
 import 'package:saiio_lab/lab3/page.dart';
 
 import 'lab1/page.dart';
 import 'lab2/page.dart';
 import 'lab4/page.dart';
+import 'lab4/shader.dart';
 
-void main() {
+Future<void> main() async {
+  lab4Shader = await FragmentProgram.fromAsset('shaders/lab4.frag');
   runApp(const MyApp());
 }
 
