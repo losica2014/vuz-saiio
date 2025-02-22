@@ -18,6 +18,7 @@ final _privateConstructorUsedError = UnsupportedError(
 mixin _$LPPModel {
   List<double> get targetEquation => throw _privateConstructorUsedError;
   double get targetValue => throw _privateConstructorUsedError;
+  bool get targetMax => throw _privateConstructorUsedError;
   List<List<double>> get constraints => throw _privateConstructorUsedError;
   List<Sign> get constraintSigns => throw _privateConstructorUsedError;
   List<double> get constraintValues => throw _privateConstructorUsedError;
@@ -37,6 +38,7 @@ abstract class $LPPModelCopyWith<$Res> {
   $Res call(
       {List<double> targetEquation,
       double targetValue,
+      bool targetMax,
       List<List<double>> constraints,
       List<Sign> constraintSigns,
       List<double> constraintValues});
@@ -59,6 +61,7 @@ class _$LPPModelCopyWithImpl<$Res, $Val extends LPPModel>
   $Res call({
     Object? targetEquation = null,
     Object? targetValue = null,
+    Object? targetMax = null,
     Object? constraints = null,
     Object? constraintSigns = null,
     Object? constraintValues = null,
@@ -72,6 +75,10 @@ class _$LPPModelCopyWithImpl<$Res, $Val extends LPPModel>
           ? _value.targetValue
           : targetValue // ignore: cast_nullable_to_non_nullable
               as double,
+      targetMax: null == targetMax
+          ? _value.targetMax
+          : targetMax // ignore: cast_nullable_to_non_nullable
+              as bool,
       constraints: null == constraints
           ? _value.constraints
           : constraints // ignore: cast_nullable_to_non_nullable
@@ -99,6 +106,7 @@ abstract class _$$LPPModelImplCopyWith<$Res>
   $Res call(
       {List<double> targetEquation,
       double targetValue,
+      bool targetMax,
       List<List<double>> constraints,
       List<Sign> constraintSigns,
       List<double> constraintValues});
@@ -119,6 +127,7 @@ class __$$LPPModelImplCopyWithImpl<$Res>
   $Res call({
     Object? targetEquation = null,
     Object? targetValue = null,
+    Object? targetMax = null,
     Object? constraints = null,
     Object? constraintSigns = null,
     Object? constraintValues = null,
@@ -132,6 +141,10 @@ class __$$LPPModelImplCopyWithImpl<$Res>
           ? _value.targetValue
           : targetValue // ignore: cast_nullable_to_non_nullable
               as double,
+      targetMax: null == targetMax
+          ? _value.targetMax
+          : targetMax // ignore: cast_nullable_to_non_nullable
+              as bool,
       constraints: null == constraints
           ? _value._constraints
           : constraints // ignore: cast_nullable_to_non_nullable
@@ -154,6 +167,7 @@ class _$LPPModelImpl implements _LPPModel {
   const _$LPPModelImpl(
       {required final List<double> targetEquation,
       required this.targetValue,
+      this.targetMax = true,
       required final List<List<double>> constraints,
       required final List<Sign> constraintSigns,
       required final List<double> constraintValues})
@@ -172,6 +186,9 @@ class _$LPPModelImpl implements _LPPModel {
 
   @override
   final double targetValue;
+  @override
+  @JsonKey()
+  final bool targetMax;
   final List<List<double>> _constraints;
   @override
   List<List<double>> get constraints {
@@ -199,7 +216,7 @@ class _$LPPModelImpl implements _LPPModel {
 
   @override
   String toString() {
-    return 'LPPModel(targetEquation: $targetEquation, targetValue: $targetValue, constraints: $constraints, constraintSigns: $constraintSigns, constraintValues: $constraintValues)';
+    return 'LPPModel(targetEquation: $targetEquation, targetValue: $targetValue, targetMax: $targetMax, constraints: $constraints, constraintSigns: $constraintSigns, constraintValues: $constraintValues)';
   }
 
   @override
@@ -211,6 +228,8 @@ class _$LPPModelImpl implements _LPPModel {
                 .equals(other._targetEquation, _targetEquation) &&
             (identical(other.targetValue, targetValue) ||
                 other.targetValue == targetValue) &&
+            (identical(other.targetMax, targetMax) ||
+                other.targetMax == targetMax) &&
             const DeepCollectionEquality()
                 .equals(other._constraints, _constraints) &&
             const DeepCollectionEquality()
@@ -224,6 +243,7 @@ class _$LPPModelImpl implements _LPPModel {
       runtimeType,
       const DeepCollectionEquality().hash(_targetEquation),
       targetValue,
+      targetMax,
       const DeepCollectionEquality().hash(_constraints),
       const DeepCollectionEquality().hash(_constraintSigns),
       const DeepCollectionEquality().hash(_constraintValues));
@@ -241,6 +261,7 @@ abstract class _LPPModel implements LPPModel {
   const factory _LPPModel(
       {required final List<double> targetEquation,
       required final double targetValue,
+      final bool targetMax,
       required final List<List<double>> constraints,
       required final List<Sign> constraintSigns,
       required final List<double> constraintValues}) = _$LPPModelImpl;
@@ -249,6 +270,8 @@ abstract class _LPPModel implements LPPModel {
   List<double> get targetEquation;
   @override
   double get targetValue;
+  @override
+  bool get targetMax;
   @override
   List<List<double>> get constraints;
   @override

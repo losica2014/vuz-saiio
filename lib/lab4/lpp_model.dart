@@ -7,6 +7,7 @@ class LPPModel with _$LPPModel {
   const factory LPPModel({
     required List<double> targetEquation,
     required double targetValue,
+    @Default(true) bool targetMax,
     required List<List<double>> constraints,
     required List<Sign> constraintSigns,
     required List<double> constraintValues
