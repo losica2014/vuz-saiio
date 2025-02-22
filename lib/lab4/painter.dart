@@ -15,7 +15,7 @@ class LPPPainter extends CustomPainter {
 
   @override
   void paint(Canvas canvas, Size size) {
-    double factor = 100;
+    double factor = 10;
     final constraintsPaint = Paint()
     ..color = Colors.black
     ..strokeWidth = 0.1
@@ -39,19 +39,28 @@ class LPPPainter extends CustomPainter {
     ..color = Colors.pink
     ..strokeWidth = 0.2;
 
-    final points = <Offset>{};
-
     canvas.clipRect(Rect.fromLTWH(0, 0, size.width, size.height));
     canvas.translate(0, size.height);
-    // canvas.translate(200, -200);
+    canvas.translate(200, -200);
     canvas.scale(factor, -factor);
+
+    final limitX = size.width / factor;
+    final limitY = size.height / factor;
 
     // canvas.drawLine(Offset(0, 0), Offset(size.width, 0), axesPaint);
     // canvas.drawLine(Offset(0, 0), Offset(0, size.height), axesPaint);
 
+    final points = <Offset>{};
+    final polygon = <Offset>[
+      Offset(0, 0),
+      Offset(limitX, 0),
+      Offset(limitX, limitY),
+      Offset(0, limitY),
+    ];
+
     for(double i = 0; i < 10; i++) {
-      canvas.drawLine(Offset(i, 0), Offset(i, size.height), axesPaint);
-      canvas.drawLine(Offset(0, i), Offset(size.width, i), axesPaint);
+      canvas.drawLine(Offset(i, 0), Offset(i, limitY), axesPaint);
+      canvas.drawLine(Offset(0, i), Offset(limitX, i), axesPaint);
     }
 
     for(int i = 0; i < constraints.length; i++) {
@@ -59,17 +68,56 @@ class LPPPainter extends CustomPainter {
       final constraintSign = constraintSigns[i];
       final constraintValue = constraintValues[i];
 
-      Offset p1 = Offset(0, min(constraintValue/constraint[1], 1000));
-      Offset p2 = Offset(min(constraintValue/constraint[0], 1000), 0);
+      Offset p1 = Offset(0, min(constraintValue/constraint[1], limitY));
+      Offset p2 = Offset(min(constraintValue/constraint[0], limitX), 0);
 
       print("Boundaries of ${constraint.toString()}=$constraintValue: ${p1.toString()} - ${p2.toString()}");
 
       if(!p1.isFinite) {
-        p1 = Offset(0, 1000);
+        p1 = Offset(0, limitY);
       }
       if(!p2.isFinite) {
-        p2 = Offset(1000, 0);
+        p2 = Offset(limitX, 0);
       }
+
+      final a1 = -constraint[0]/constraint[1];
+      final b1 = constraintValue/constraint[1];
+
+      if(p1.dx < p2.dx && [Sign.greater, Sign.greaterOrEqual].contains(constraintSign) || p1.dx > p2.dx && [Sign.less, Sign.lessOrEqual].contains(constraintSign)) {
+        (p1, p2) = (p2, p1);
+      }
+      
+      int pos = 0;
+      int? cutoffStartPos;
+      Offset start, end;
+      int protection = 0;
+      while(pos < polygon.length && protection < 100) {
+        protection++;
+        start = polygon[pos];
+        end = polygon[(pos + 1) % polygon.length];
+
+        final a2 = (end.dy - start.dy)/(end.dx - start.dx);
+        final b2 = start.dy - a2 * start.dx;
+
+        Offset? intersectionPoint = _calculateIntersectionPoint(a1, b1, a2, b2);
+
+        if(intersectionPoint == null || !intersectionPoint.isFinite) {
+          pos++;
+          continue;
+        }
+
+        if(cutoffStartPos == null) {
+          polygon.insert(pos + 1, intersectionPoint);
+          cutoffStartPos = pos + 1;
+          pos += 2;
+        } else {
+          polygon.removeRange(cutoffStartPos + 1, pos + 1);
+          polygon.insert(cutoffStartPos + 1, intersectionPoint);
+          pos = cutoffStartPos + 1;
+          cutoffStartPos = null;
+        }
+      }
+      print(polygon);
 
       canvas.drawLine(p1, p2, constraintsPaint);
 
@@ -78,19 +126,22 @@ class LPPPainter extends CustomPainter {
         final constraint2 = constraints[j];
         final constraintValue2 = constraintValues[j];
 
-        Offset? intersectionPoint = _calculateIntersectionPoint(-constraint[0]/constraint[1], constraintValue/constraint[1], -constraint2[0]/constraint2[1], constraintValue2/constraint2[1]);
+        final a2 = -constraint2[0]/constraint2[1];
+        final b2 = constraintValue2/constraint2[1];
+
+        Offset? intersectionPoint = _calculateIntersectionPoint(a1, b1, a2, b2);
 
         if(constraint2[1] == 0)
-          intersectionPoint = Offset(0, constraintValue/constraint[1]);
+          intersectionPoint = Offset(0, b1);
 
         if(constraint[1] == 0)
-          intersectionPoint = Offset(0, constraintValue2/constraint2[1]);
+          intersectionPoint = Offset(0, b2);
 
         if(intersectionPoint != null && intersectionPoint.isFinite) {
-          print("Intersection of ${constraint.toString()}=$constraintValue and ${constraint2.toString()}=$constraintValue2: ${intersectionPoint.toString()}");
+          // print("Intersection of ${constraint.toString()}=$constraintValue and ${constraint2.toString()}=$constraintValue2: ${intersectionPoint.toString()}");
           points.add(intersectionPoint);
         } else {
-          print("No intersection of ${constraint.toString()}=$constraintValue and ${constraint2.toString()}=$constraintValue2: ${intersectionPoint.toString()}");
+          // print("No intersection of ${constraint.toString()}=$constraintValue and ${constraint2.toString()}=$constraintValue2: ${intersectionPoint.toString()}");
         }
       }
     }
@@ -115,15 +166,51 @@ class LPPPainter extends CustomPainter {
         intersectionPoint = Offset(0, targetValue/targetEquation[1]);
 
       if(intersectionPoint != null && intersectionPoint.isFinite) {
-        print("Intersection of ${constraint.toString()}=$constraintValue and ${targetEquation.toString()}=$targetValue: ${intersectionPoint.toString()}");
+        // print("Intersection of ${constraint.toString()}=$constraintValue and ${targetEquation.toString()}=$targetValue: ${intersectionPoint.toString()}");
         targetPoints.add(intersectionPoint);
       } else {
-        print("No intersection of ${constraint.toString()}=$constraintValue and ${targetEquation.toString()}=$targetValue: ${intersectionPoint.toString()}");
+        // print("No intersection of ${constraint.toString()}=$constraintValue and ${targetEquation.toString()}=$targetValue: ${intersectionPoint.toString()}");
       }
     }
 
+    // final a1 = -targetEquation[0]/targetEquation[1];
+    // final b1 = targetValue/targetEquation[1];
+    // int pos = 0;
+    // int? cutoffStartPos;
+    // Offset start, end;
+    // int protection = 0;
+    // while(pos < polygon.length && protection < 100) {
+    //   protection++;
+    //   start = polygon[pos];
+    //   end = polygon[(pos + 1) % polygon.length];
+
+    //   final a2 = (end.dy - start.dy)/(end.dx - start.dx);
+    //   final b2 = start.dy - a2 * start.dx;
+
+    //   Offset? intersectionPoint = _calculateIntersectionPoint(a1, b1, a2, b2);
+
+    //   if(intersectionPoint == null || !intersectionPoint.isFinite) {
+    //     pos++;
+    //     continue;
+    //   }
+
+    //   if(cutoffStartPos == null) {
+    //     polygon.insert(pos + 1, intersectionPoint);
+    //     cutoffStartPos = pos + 1;
+    //     pos += 2;
+    //   } else {
+    //     polygon.removeRange(cutoffStartPos + 1, pos + 1);
+    //     polygon.insert(cutoffStartPos + 1, intersectionPoint);
+    //     pos = cutoffStartPos + 1;
+    //     cutoffStartPos = null;
+    //   }
+    // }
+
     canvas.drawPoints(PointMode.points, points.toList(), intersectionPaint);
     canvas.drawPoints(PointMode.points, targetPoints.toList(), targetIntersectionPaint);
+
+    canvas.drawPath(Path()..addPolygon(polygon, true), Paint()..color = Colors.blue.withAlpha(100));
+    canvas.drawPoints(PointMode.points, polygon, Paint()..color = Colors.orange..strokeWidth = 0.3);
   }
 
   @override
