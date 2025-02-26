@@ -16,6 +16,7 @@ class LPPPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     double factor = 10 * scale;
+    
     final constraintsPaint = Paint()
     ..color = Colors.black
     ..strokeWidth = 0.1
