@@ -1,11 +1,10 @@
 import 'dart:ui';
 
 import 'package:flutter/material.dart';
-import 'package:saiio_lab/lab3/page.dart';
-import 'package:saiio_lab/lab5/page.dart';
 
 import 'lab1/page.dart';
 import 'lab2/page.dart';
+import 'lab3/page.dart';
 import 'lab4/page.dart';
 import 'lab4/shader.dart';
 
@@ -35,7 +34,6 @@ class MyApp extends StatelessWidget {
         '/lab2': (context) => const PumpStationPage(),
         '/lab3': (context) => const BuildingPage(),
         '/lab4': (context) => const LPPPage(),
-        '/lab5': (context) => const LPPPageMMethod(),
       },
     );
   }
@@ -83,11 +81,7 @@ class HomePage extends StatelessWidget {
                   ),
                   FilledButton.tonal(
                     onPressed: () => Navigator.pushNamed(context, '/lab4'),
-                    child: Text("Лабораторная работа 4"),
-                  ),
-                  FilledButton.tonal(
-                    onPressed: () => Navigator.pushNamed(context, '/lab5'),
-                    child: Text("Лабораторная работа 5"),
+                    child: Text("Лабораторная работа 4/5"),
                   ),
                 ],
               ),

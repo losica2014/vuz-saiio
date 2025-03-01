@@ -59,8 +59,8 @@ class LPPPainter extends CustomPainter {
       final constraint = model.constraints[i];
       final constraintValue = model.constraintValues[i];
 
-      Offset p1 = Offset(0, min(constraintValue/constraint[1], limitY));
-      Offset p2 = Offset(min(constraintValue/constraint[0], limitX), 0);
+      Offset p1 = Offset(0, constraintValue/constraint[1]);
+      Offset p2 = Offset(constraintValue/constraint[0], 0);
 
       // print("Boundaries of ${constraint.toString()}=$constraintValue: ${p1.toString()} - ${p2.toString()}");
 

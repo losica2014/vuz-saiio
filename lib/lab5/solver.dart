@@ -1,21 +1,14 @@
+import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:saiio_lab/lab4/lpp_model.dart';
+
+part 'solver.freezed.dart';
 
 extension LPPModelSolver on LPPModel {
   /// M-method
-  double solve() {
-    double M = double.infinity;
+  LPPSimplexSolution solve() {
+    double M = 1000;
     // Индексы базисных переменных
     List<int> bases = [];
-    
-    // List<List<double>> constraints = List.generate(this.constraintValues.length, (i) {
-    //   final row = List<double>.generate(this.targetEquation.length + this.constraintValues.length + 1, (j) {
-    //     if(j < targetEquation.length) return this.constraints[i][j];
-    //     else if(j < targetEquation.length + this.constraintValues.length) return j - targetEquation.length == i ? 1 : 0;
-    //     else return this.constraintValues[i];
-    //   });
-    //   if(row.last < 0) for(int j = 0; j < row.length; j++) row[j] *= -1;
-    //   return row;
-    // });
 
     // Коэффициенты при x_i, y_*
     List<List<double>> constraints = [];
@@ -31,25 +24,30 @@ extension LPPModelSolver on LPPModel {
       List<double> row = [];
       int base = 0;
 
+      bool shouldInvert = [Sign.greater, Sign.greaterOrEqual].contains(this.constraintSigns[i]);
+      int invertCoef = shouldInvert ? -1 : 1;
+
       // Добавление коэффициентов при основных неизвестных
-      for(int j = 0; j < this.constraints[i].length; j++) {
-        row.add(this.constraints[i][j]);
+      for(int j = 0; j < this.targetEquation.length; j++) {
+        row.add(this.constraints[i][j] * invertCoef);
       }
 
       // Добавление коэффициентов при введённом базисе
       for(int j = 0; j < this.constraints.length; j++) {
-        if(j == i) base = row.length - 1;
         row.add(j == i ? 1 : 0);
+        if(j == i) base = row.length - 1;
       }
 
       // Добавление b_i
-      constraintValues.add(this.constraintValues[i]);
+      constraintValues.add(this.constraintValues[i] * invertCoef);
 
       // Инвертирование знаков, если b_i < 0
       if(constraintValues.last < 0) {
         for(int j = 0; j < row.length; j++) {
           row[j] *= -1;
         }
+
+        constraintValues.last *= -1;
 
         // Добавление нового неизвестного y_* = 1 (все остальные y_* = 0)
         for(int j = 0; j < yCount; j++) {
@@ -67,7 +65,7 @@ extension LPPModelSolver on LPPModel {
 
     // Добавление оставшихся нулевых коэффициентов при y_*
     for(int i = 0; i < constraints.length; i++) {
-      for(int j = 0; j < this.constraints[i].length + this.constraints.length + yCount - constraints[i].length; j++) {
+      for(int j = constraints[i].length; j < this.targetEquation.length + this.constraints.length + yCount; j++) {
         constraints[i].add(0);
       }
     }
@@ -82,7 +80,7 @@ extension LPPModelSolver on LPPModel {
     }
 
     for(int i = 0; i < yCount; i++) {
-      targetEquation.add(-M);
+      targetEquation.add((targetMax ? -1 : 1) * M);
     }
 
     // Расчёт delta_i
@@ -92,20 +90,36 @@ extension LPPModelSolver on LPPModel {
       for(int j = 0; j < constraints.length; j++) {
         delta += constraints[j][i] * targetEquation[bases[j]];
       }
+      delta -= targetEquation[i];
       deltas.add(delta);
     }
     double delta0 = 0;
     for(int i = 0; i < constraints.length; i++) {
       delta0 += constraintValues[i] * targetEquation[bases[i]];
     }
+    
+    _printSimplexTable(constraints, constraintValues, targetEquation, bases, yCount, deltas, delta0);
 
     bool shouldContinue;
-
+    int iter = 0;
     do {
       // Разрешающий столбец
-      int minDeltaIndex = 0;
-      for(int i = 1; i < deltas.length; i++) {
-        if(deltas[i] < deltas[minDeltaIndex]) minDeltaIndex = i;
+      int? minDeltaIndex;
+      for(int i = 0; i < deltas.length; i++) {
+        if(minDeltaIndex == null || (targetMax ? 1 : -1) * deltas[i] < (targetMax ? 1 : -1) * deltas[minDeltaIndex]) minDeltaIndex = i;
+      }
+      if (minDeltaIndex == null) {
+        print("Нет допустимых решений для выбора разрешающего столбца.");
+        return LPPSimplexSolution(
+          success: false,
+          result: null,
+          coefs: deltas,
+          constraints: constraints,
+          constraintValues: constraintValues,
+          bases: bases,
+          yCount: yCount,
+          targetEquation: targetEquation
+        );
       }
 
       List<double> options = [];
@@ -113,9 +127,22 @@ extension LPPModelSolver on LPPModel {
         options.add(constraintValues[i] / constraints[i][minDeltaIndex]);
       }
       // Разрешающая строка
-      int minOptionIndex = 0;
-      for(int i = 1; i < options.length; i++) {
-        if(options[i] < options[minOptionIndex] && options[i] > 0) minOptionIndex = i;
+      int? minOptionIndex;
+      for(int i = 0; i < options.length; i++) {
+        if((minOptionIndex == null || options[i] < options[minOptionIndex]) && options[i] > 0) minOptionIndex = i;
+      }
+      if (minOptionIndex == null || options[minOptionIndex] <= 0) {
+        print("Нет допустимых решений для выбора разрешающей строки.");
+        return LPPSimplexSolution(
+          success: false,
+          result: null,
+          coefs: deltas,
+          constraints: constraints,
+          constraintValues: constraintValues,
+          bases: bases,
+          yCount: yCount,
+          targetEquation: targetEquation
+        );
       }
       bases[minOptionIndex] = minDeltaIndex;
 
@@ -124,21 +151,26 @@ extension LPPModelSolver on LPPModel {
       for(int i = 0; i < constraints.length; i++) {
         for(int j = 0; j < constraints[i].length; j++) {
           if(i == minOptionIndex) {
-            newConstraints[i][j] /= options[minOptionIndex];
+            newConstraints[i][j] /= constraints[minOptionIndex][minDeltaIndex];
           } else if(j == minDeltaIndex) {
             newConstraints[i][j] = 0;
           } else {
-            newConstraints[i][j] = constraintValues[i] - constraintValues[minOptionIndex] * constraints[i][minDeltaIndex] / constraints[minOptionIndex][minDeltaIndex];
+            newConstraints[i][j] = constraints[i][j] - constraints[minOptionIndex][j] * constraints[i][minDeltaIndex] / constraints[minOptionIndex][minDeltaIndex];
           }
+          if(newConstraints[i][j].isNaN) newConstraints[i][j] = 0;
         }
       }
       for(int i = 0; i < constraintValues.length; i++) {
         if(i == minOptionIndex) {
-          newConstraintValues[i] /= options[minOptionIndex];
+          newConstraintValues[i] /= constraints[minOptionIndex][minDeltaIndex];
         } else {
           newConstraintValues[i] = constraintValues[i] - constraintValues[minOptionIndex] * constraints[i][minDeltaIndex] / constraints[minOptionIndex][minDeltaIndex];
         }
+        if(newConstraintValues[i].isNaN) newConstraintValues[i] = 0;
       }
+
+      constraintValues = newConstraintValues;
+      constraints = newConstraints;
       
       // Расчёт delta_i
       deltas = [];
@@ -147,6 +179,7 @@ extension LPPModelSolver on LPPModel {
         for(int j = 0; j < constraints.length; j++) {
           delta += constraints[j][i] * targetEquation[bases[j]];
         }
+        delta -= targetEquation[i];
         deltas.add(delta);
       }
       delta0 = 0;
@@ -154,28 +187,74 @@ extension LPPModelSolver on LPPModel {
         delta0 += constraintValues[i] * targetEquation[bases[i]];
       }
 
-      print("Базис: ${bases.join(', ')}");
-      print("Разрешающий столбец: $minDeltaIndex, разрешающая строка: $minOptionIndex");
+      // print("Базис: ${bases.map((e) => e + 1,).join(', ')}");
+      print("======== Новый шаг ========");
+      print("Разрешающий столбец: ${minDeltaIndex+1}, разрешающая строка: ${minOptionIndex+1}");
+      print("Коэффициенты, обосновывающие выбор: " + options.map((e) => e.toStringAsFixed(2)).join(', '));
+      _printSimplexTable(constraints, constraintValues, targetEquation, bases, yCount, deltas, delta0);
       
-      shouldContinue = deltas.any((d) => d < 0) || delta0 < 0;
-    } while(shouldContinue);
+      // shouldContinue = deltas.any((d) => d < 0) || delta0 < 0;
+      shouldContinue = deltas.asMap().entries.any((entry) => (targetMax ? 1 : -1) * entry.value < 0 && !bases.contains(entry.key));
+
+      iter++;
+    } while(shouldContinue && iter < 100);
+    if(iter == 100) print("Превышено максимальное количество итераций.");
 
     // _printSimplexTable(constraints);
     double f = delta0;
-    List<double> f_coefs = List.from(targetEquation);
+    List<double> fCoefs = deltas;
 
     print(f);
-    print(f_coefs);
+    print(fCoefs);
 
-    return f;
+    if(f > M) {
+      return LPPSimplexSolution(
+        result: null,
+        coefs: fCoefs,
+        constraints: constraints,
+        constraintValues: constraintValues,
+        bases: bases,
+        yCount: yCount,
+        targetEquation: targetEquation
+      );
+    } else {
+      return LPPSimplexSolution(
+        result: f,
+        coefs: fCoefs,
+        constraints: constraints,
+        constraintValues: constraintValues,
+        bases: bases,
+        yCount: yCount,
+        targetEquation: targetEquation
+      );
+    }
   }
 }
 
-// void _printSimplexTable(List<List<double>> constraints, List<double> values) {
-//   print("="*80);
-//   print([for(int i = 1; i <= t.first.length - 1; i++) "x$i", "b"].join('\t'));
-//   for(int i = 0; i < t.length; i++) {
-//     print(t[i].join('\t'));
-//   }
-//   print("="*80);
-// }
+void _printSimplexTable(List<List<double>> constraints, List<double> constraintValues, List<double> targetEquation, List<int> bases, int yCount, List<double> deltas, double delta0) {
+  print("="*80);
+  print(["базис", "b", for(int i = 1; i <= targetEquation.length - yCount; i++) "x$i", for(int i = 0; i < yCount; i++) "y$i"].join('\t'));
+  for(int i = 0; i < constraints.length; i++) {
+    List<double> row = constraints[i];
+    String base = "x${bases[i]+1}";
+    if(bases[i] >= targetEquation.length - yCount) base = "y${bases[i] - (targetEquation.length - yCount)}";
+    print([base, constraintValues[i], ...row].map((e) => e is double ? e.toStringAsFixed(2) : e.toString()).join('\t'));
+  }
+  print(["f(x)", "", ...targetEquation].map((e) => e is double ? e.toStringAsFixed(2) : e.toString()).join('\t'));
+  print(["delta", delta0, ...deltas].map((e) => e is double ? e.toStringAsFixed(2) : e.toString()).join('\t'));
+  print("="*80);
+}
+
+@freezed
+class LPPSimplexSolution with _$LPPSimplexSolution {
+  const factory LPPSimplexSolution({
+    @Default(true) bool success,
+    double? result,
+    List<double>? coefs,
+    @Default([]) List<List<double>> constraints,
+    @Default([]) List<double> constraintValues,
+    @Default([]) List<int> bases,
+    @Default(0) int yCount,
+    @Default([]) List<double> targetEquation
+  }) = _LPPSimplexSolution;
+}
