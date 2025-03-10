@@ -4,7 +4,7 @@ import 'package:saiio_lab/lab4/lpp_model.dart';
 part 'solver.freezed.dart';
 
 extension LPPModelSolver on LPPModel {
-  /// M-method
+  /// М-метод
   LPPSimplexSolution solve() {
     double M = 1000;
     // Индексы базисных переменных
@@ -193,7 +193,6 @@ extension LPPModelSolver on LPPModel {
       print("Коэффициенты, обосновывающие выбор: " + options.map((e) => e.toStringAsFixed(2)).join(', '));
       _printSimplexTable(constraints, constraintValues, targetEquation, bases, yCount, deltas, delta0);
       
-      // shouldContinue = deltas.any((d) => d < 0) || delta0 < 0;
       shouldContinue = deltas.asMap().entries.any((entry) => (targetMax ? 1 : -1) * entry.value < 0 && !bases.contains(entry.key));
 
       iter++;
