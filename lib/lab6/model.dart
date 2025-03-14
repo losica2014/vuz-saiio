@@ -13,6 +13,27 @@ class TransportProblems {
     supply: [150, 90, 170, 140],
     demand: [100, 50, 200]
   );
+  static const TransportProblem demo = TransportProblem(
+    prices: [
+      [5, 7, 5, 1],
+      [3, 5, 4, 2],
+      [4, 5, 4, 3],
+      [5, 2, 3, 4]
+    ],
+    supply: [40, 60, 60, 100],
+    demand: [50, 100, 50, 50]
+  );
+  static const TransportProblem demo3 = TransportProblem(
+    prices: [
+      [3,2,4,6,7,5],
+      [3,8,7,3,3,3],
+      [2,8,5,4,4,5],
+      [3,5,6,2,3,2],
+      [3,2,4,6,2,6]
+    ],
+    supply: [100, 150, 50, 125, 25],
+    demand: [15, 35, 100, 75, 125, 100]
+  );
 }
 
 @freezed
@@ -37,8 +58,8 @@ class TransportProblem with _$TransportProblem {
           totalSupply - totalDemand
         ],
         prices: [
-          ...prices,
-          List.filled(supply.length, 0.0)
+          for(var i = 0; i < supply.length; i++)
+            [...prices[i], 0.0]
         ]
       );
     } else if(totalDemand > totalSupply) {
@@ -48,8 +69,8 @@ class TransportProblem with _$TransportProblem {
           totalDemand - totalSupply
         ],
         prices: [
-          for(var i = 0; i < prices.length; i++)
-            [...prices[i], 0.0]
+          ...prices,
+          List.filled(demand.length, 0.0)
         ]
       );
     } else {

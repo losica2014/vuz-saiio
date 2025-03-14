@@ -211,7 +211,7 @@ class LogEntry {
   final int wolves;
 }
 
-typedef Coord = (int, int);
+typedef Coord = (int x, int y);
 
 abstract class Cell {}
 

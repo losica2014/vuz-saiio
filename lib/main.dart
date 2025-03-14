@@ -7,6 +7,7 @@ import 'lab2/page.dart';
 import 'lab3/page.dart';
 import 'lab4/page.dart';
 import 'lab4/shader.dart';
+import 'lab6/page.dart';
 
 Future<void> main() async {
   lab4Shader = await FragmentProgram.fromAsset('shaders/lab4.frag');
@@ -34,6 +35,7 @@ class MyApp extends StatelessWidget {
         '/lab2': (context) => const PumpStationPage(),
         '/lab3': (context) => const BuildingPage(),
         '/lab4': (context) => const LPPPage(),
+        '/lab6': (context) => const TPPage(),
       },
     );
   }
@@ -82,6 +84,10 @@ class HomePage extends StatelessWidget {
                   FilledButton.tonal(
                     onPressed: () => Navigator.pushNamed(context, '/lab4'),
                     child: Text("Лабораторная работа 4/5"),
+                  ),
+                  FilledButton.tonal(
+                    onPressed: () => Navigator.pushNamed(context, '/lab6'),
+                    child: Text("Лабораторная работа 6"),
                   ),
                 ],
               ),
