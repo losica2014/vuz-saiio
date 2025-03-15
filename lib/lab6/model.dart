@@ -3,16 +3,6 @@ import 'package:freezed_annotation/freezed_annotation.dart';
 part 'model.freezed.dart';
 
 class TransportProblems {
-  static const TransportProblem problem = TransportProblem(
-    prices: [
-      [3, 5, 4],
-      [2, 3, 1],
-      [2, 3, 3],
-      [4, 1, 2]
-    ],
-    supply: [150, 90, 170, 140],
-    demand: [100, 50, 200]
-  );
   static const TransportProblem demo = TransportProblem(
     prices: [
       [5, 7, 5, 1],
@@ -22,6 +12,16 @@ class TransportProblems {
     ],
     supply: [40, 60, 60, 100],
     demand: [50, 100, 50, 50]
+  );
+  static const TransportProblem problem = TransportProblem(
+    prices: [
+      [3, 5, 4],
+      [2, 3, 1],
+      [2, 3, 3],
+      [4, 1, 2]
+    ],
+    supply: [150, 90, 170, 140],
+    demand: [100, 50, 200]
   );
   static const TransportProblem demo3 = TransportProblem(
     prices: [
@@ -77,4 +77,24 @@ class TransportProblem with _$TransportProblem {
       return this;
     }
   } 
+}
+
+@freezed
+class TransportProblemSolution with _$TransportProblemSolution {
+  const factory TransportProblemSolution({
+    required List<List<double?>> coefs,
+    required TransportProblem problem,
+  }) = _TransportProblemSolution;
+
+  const TransportProblemSolution._();
+
+  double get totalCost {
+    double sum = 0;
+    for(int i = 0; i < coefs.length; i++) {
+      for(int j = 0; j < coefs[i].length; j++) {
+        sum += (coefs[i][j] ?? 0) * problem.prices[i][j];
+      }
+    }
+    return sum;
+  }
 }

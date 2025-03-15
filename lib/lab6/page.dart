@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:saiio_lab/lab6/model.dart';
+import 'package:saiio_lab/lab6/solution.dart';
 import 'package:saiio_lab/lab6/solver.dart';
 
 class TPPage extends StatefulWidget {
@@ -10,14 +11,7 @@ class TPPage extends StatefulWidget {
 }
 
 class _TPPageState extends State<TPPage> {
-  String solution = "";
-
-  @override
-  void initState() {
-    solution = solve(TransportProblems.demo3).join('\n');
-    super.initState();
-  }
-
+  TransportProblemSolution? solution;
 
   @override
   Widget build(BuildContext context) {
@@ -26,8 +20,18 @@ class _TPPageState extends State<TPPage> {
         title: Text("Лабораторная работа 6"),
       ),
       body: Column(
+        spacing: 20,
         children: [
-          Text(solution)
+          DropdownMenu(
+            onSelected: (value) => setState(() => solution = value != null ? solve(value) : null),
+            initialSelection: TransportProblems.demo,
+            dropdownMenuEntries: [
+              DropdownMenuEntry(label: "Пример 1", value: TransportProblems.demo),
+              DropdownMenuEntry(label: "Вариант", value: TransportProblems.problem),
+              DropdownMenuEntry(label: "Пример 3", value: TransportProblems.demo3),
+            ]
+          ),
+          solution != null ? TPSolutionView(solution!) : Text("Выберите проблему")
         ],
       )
     );

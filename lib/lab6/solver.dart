@@ -4,7 +4,7 @@ import 'package:saiio_lab/lab1/state.dart';
 
 import 'model.dart';
 
-List<List<double?>> solve(TransportProblem problem) {
+TransportProblemSolution solve(TransportProblem problem) {
   problem = problem.makeBalanced();
 
   List<List<double?>> coefs = List.generate(problem.supply.length, (e) => List.generate(problem.demand.length, (e) => null));
@@ -24,80 +24,126 @@ List<List<double?>> solve(TransportProblem problem) {
   // }
   Set<Coord> used = {};
 
-  while(supplyLeft.any((e) => e != null && e > 0) || demandLeft.any((e) => e != null && e > 0)) {
-    Coord? minPrice = _chooseMinPrice(problem, used);
-    if(minPrice == null) break;
+  int iter3 = 0;
+  int maxIter3 = 100;
+
+  while(used.length < problem.supply.length * problem.demand.length /* supplyLeft.any((e) => e != null) || demandLeft.any((e) => e != null) */ && iter3 < maxIter3) {
+    iter3++;
+    List<Coord>? minPrices = _chooseMinPrice(problem, used);
+    if(minPrices == null) throw Exception("No min price found");
     /* if(supplyLeft[minPrice.$1] == null || demandLeft[minPrice.$2] == null) {
       
-    } else  */if(supplyLeft[minPrice.$1] != null && demandLeft[minPrice.$2] != null) {
-      double coef = min(supplyLeft[minPrice.$1]!, demandLeft[minPrice.$2]!);
-      coefs[minPrice.$1][minPrice.$2] = coef;
-      supplyLeft[minPrice.$1] = supplyLeft[minPrice.$1]! - coef;
-      demandLeft[minPrice.$2] = demandLeft[minPrice.$2]! - coef;
-      if(supplyLeft[minPrice.$1] == 0) supplyLeft[minPrice.$1] = null;
-      if(demandLeft[minPrice.$2] == 0) demandLeft[minPrice.$2] = null;
+    } else  */
+    print("Min prices: ${minPrices.map((e) => "(${e.$1}, ${e.$2})").join(", ")}");
+    for(var minPrice in minPrices) {
+      if(supplyLeft[minPrice.$1] != null && demandLeft[minPrice.$2] != null) {
+        double coef = min(supplyLeft[minPrice.$1]!, demandLeft[minPrice.$2]!);
+        coefs[minPrice.$1][minPrice.$2] = coef;
+        supplyLeft[minPrice.$1] = supplyLeft[minPrice.$1]! - coef;
+        demandLeft[minPrice.$2] = demandLeft[minPrice.$2]! - coef;
+        print("Populated (${minPrice.$1}, ${minPrice.$2}) with $coef");
+        if(supplyLeft[minPrice.$1] == 0) {
+          supplyLeft[minPrice.$1] = null;
+          print("Drained supply ${minPrice.$1}");
+          // for(int i = 0; i < coefs.first.length; i++) {
+          //   used.add((i, minPrice.$2));
+          //   // print("Excluding (${minPrice.$1}, $i) of row ${minPrice.$1}");
+          // }
+          // print("Excluding row ${minPrice.$1}");
+        }
+        if(demandLeft[minPrice.$2] == 0) {
+          print("Drained demand ${minPrice.$2}");
+          // if(supplyLeft[minPrice.$1] != null) {
+            demandLeft[minPrice.$2] = null;
+            // for(int i = 0; i < coefs.length; i++) {
+            //   used.add((minPrice.$1, i));
+            //   // print("Excluding ($i, ${minPrice.$2}) of column ${minPrice.$2}");
+            // }
+            // print("Excluding column ${minPrice.$2}");
+          // } else {
+            // print("Drained supply ${minPrice.$1} and demand ${minPrice.$2}, letting demand be 0");
+          // }
+        }
+        used.add(minPrice);
+        break;
+      } else {
+        print("Skipped (${minPrice.$1}, ${minPrice.$2})");
+        used.add(minPrice);
+      }
     }
-    used.add(minPrice);
+    print("Remaining unused coords: ${problem.supply.length * problem.demand.length - used.length}");
+    print("Remaining supply: ${supplyLeft}");
+    print("Remaining demand: ${demandLeft}");
   }
 
   // Нахождение оптимального решения
   bool continueRunning = true;
+  int iterations = 0;
+  int maxIterations = 200;
   do {
-    // int coefsCount = coefs.fold(0, (e, el) => e + el.fold(0, (ee, ele) => ee + (ele == null ? 0 : 1)));
-    // int coefsCountTarget = problem.supply.length + problem.demand.length - 1;
-    // if(coefsCount < coefsCountTarget) {
-    //   for(int i = 0; i < coefsCountTarget - coefsCount; i++) {
-    //     bool done = false;
-    //     for(int x = 0; x < problem.supply.length; x++) {
-    //       for(int y = 0; y < problem.demand.length; y++) {
-    //         if(coefs[x][y] == null) {
-    //           coefs[x][y] = 0;
-    //           done = true;
-    //           break;
-    //         }
-    //       }
-    //       if(done) break;
-    //     }
-    //     if(!done) throw Exception("Недостаточно коэффициентов");
-    //   }
-    // }
+    int coefsCount = coefs.fold(0, (e, el) => e + el.fold(0, (ee, ele) => ee + (ele == null ? 0 : 1)));
+    int coefsCountTarget = problem.supply.length + problem.demand.length - 1;
+    if(coefsCount < coefsCountTarget) {
+      for(int i = 0; i < coefsCountTarget - coefsCount; i++) {
+        bool done = false;
+        for(int x = 0; x < problem.supply.length; x++) {
+          for(int y = 0; y < problem.demand.length; y++) {
+            if(coefs[x][y] == null) {
+              if(getPath(coefs, [(x, y)]) == null) {
+                coefs[x][y] = 0;
+                done = true;
+                break;
+              }
+            }
+          }
+          if(done) break;
+        }
+        if(!done) throw Exception("Недостаточно коэффициентов");
+      }
+    }
 
     List<double?> u = List.filled(problem.supply.length, null);
     List<double?> v = List.filled(problem.demand.length, null);
 
     u[0] = 0;
-
-    while(u.any((e) => e == null) || v.any((e) => e == null)) {
+    int iter = 0;
+    int maxIter = 1000;
+    while((u.any((e) => e == null) || v.any((e) => e == null)) && iter < maxIter) {
       for(int i = 0; i < problem.supply.length; i++) {
         for(int j = 0; j < problem.demand.length; j++) {
-          if(u[i] != null && v[j] == null) {
+          if(u[i] != null && v[j] == null && coefs[i][j] != null) {
             v[j] = problem.prices[i][j] - u[i]!;
+            print("v[$j] = ${problem.prices[i][j]} ($i, $j) - ${u[i]} = ${v[j]}");
           }
-          else if(v[j] != null && u[i] == null) {
+          else if(v[j] != null && u[i] == null && coefs[i][j] != null) {
             u[i] = problem.prices[i][j] - v[j]!;
-          } else if(u[i] != null && v[j] != null) {
+            print("u[$i] = ${problem.prices[i][j]} ($i, $j) - ${v[j]} = ${u[i]}");
+          } else if(u[i] != null && v[j] != null && coefs[i][j] != null) {
             if(u[i]! + v[j]! != problem.prices[i][j]) {
-              // throw Exception("Неравенство в u+v=c");
+              throw Exception("Неравенство в u+v=c: (${u[i]} + ${v[j]} != ${problem.prices[i][j]})");
             }
           }
         }
       }
+      iter++;
     }
 
     List<List<double>> deltas = [];
     double minDelta = double.maxFinite;
-    Coord minDeltaCoord = (-1, -1);
+    // Coord minDeltaCoord = (-1, -1);
+    Map<double, List<Coord>> deltaMap = {};
     for(int i = 0; i < problem.supply.length; i++) {
       deltas.add([]);
       for(int j = 0; j < problem.demand.length; j++) {
         double delta = 0;
         if(coefs[i][j] == null) {
-          delta = problem.prices[i][j] - u[i]! - v[j]!;
+          delta = problem.prices[i][j] - (u[i]! + v[j]!);
         }
         deltas[i].add(delta);
+        deltaMap.putIfAbsent(delta, () => []).add((i, j));
         if(delta < minDelta) {
           minDelta = delta;
-          minDeltaCoord = (i, j);
+          // minDeltaCoord = (i, j);
         }
       }
     }
@@ -107,59 +153,92 @@ List<List<double?>> solve(TransportProblem problem) {
         // print(coefs[i].map((e) => e ?? '--').join('\t') + "\t${u[i]}");
       s += "A$i\t";
       for(int j = 0; j < problem.demand.length; j++) {
-        s += "${coefs[i][j] ?? '--'} (${deltas[i][j]})\t";
+        s += "${coefs[i][j]?.toStringAsFixed(0) ?? '--'} (c${problem.prices[i][j].toStringAsFixed(0)} d${deltas[i][j].toStringAsFixed(0)})\t";
       }
-      s += "${u[i]}\n";
+      s += "${u[i]?.toStringAsFixed(0)}\n";
     }
-    s += v.join('\t');
+    s += "\t" + v.map((e) => e?.toStringAsFixed(0)).join('\t');
     print(s);
     print("Total cost: $totalCost");
 
-    print("Min delta: $minDelta $minDeltaCoord");
+    // print("Min delta: $minDelta $minDeltaCoord");
     print('='*20);
 
-    continueRunning = minDelta < 0;
+    continueRunning = minDelta < 0 && iterations < maxIterations;
+    iterations++;
 
     if(!continueRunning) break;
 
-    List<Coord>? path = getPath(coefs, [minDeltaCoord]);
+    bool done = false;
+    for(var deltaMapEntry in deltaMap.entries.where((e) => e.key < 0).toList()..sort((e1, e2) => e1.key.compareTo(e2.key))) {
+      for(var minDeltaCoord in deltaMapEntry.value) {
+        List<Coord>? path = getPath(coefs, [minDeltaCoord]);
 
-    if(path == null) throw Exception("Путь пуст");
+        if(path == null) continue;//throw Exception("Путь пуст");
+        print("Path: ${path.join(' -> ')}");
 
-    double minVal = double.infinity;
-    for(var (i, c) in path.sublist(1, path.length - 1).indexed) {
-      if((i - 1) % 2 == 1) minVal = min(coefs[c.$1][c.$2]!, minVal);
-    }
+        double minVal = double.infinity;
+        for(var (i, c) in path.sublist(1, path.length - 1).indexed) {
+          if((i + 1) % 2 == 1) minVal = min(coefs[c.$1][c.$2]!, minVal);
+        }
 
-    if(minVal == double.infinity) throw Exception('minVal == infinity');
+        if(minVal == double.infinity) throw Exception('minVal == infinity');
+        if(minVal == 0) {
+          //throw Exception('minVal == 0');
+          print('minVal == 0, skipping');
+          continue;
+        }
+        print("minVal: $minVal");
+        print("Predicted total cost change: $totalCost + ${minVal * minDelta}");
 
-    for(var (i, c) in path.sublist(0, path.length - 1).indexed) {
-      if(i % 2 == 1) {
-        coefs[c.$1][c.$2] = (coefs[c.$1][c.$2] ?? 0) - minVal;
-        if(coefs[c.$1][c.$2]! < 0) throw Exception('Negative amount');
-        if(coefs[c.$1][c.$2] == 0) coefs[c.$1][c.$2] = null;
-      } else {
-        coefs[c.$1][c.$2] = (coefs[c.$1][c.$2] ?? 0) + minVal;
+        for(var (i, c) in path.sublist(0, path.length - 1).indexed) {
+          if(i % 2 == 1) {
+            coefs[c.$1][c.$2] = coefs[c.$1][c.$2]! - minVal;
+            if(coefs[c.$1][c.$2]! < 0) throw Exception('Negative amount');
+            if(coefs[c.$1][c.$2] == 0) coefs[c.$1][c.$2] = null;
+          } else {
+            coefs[c.$1][c.$2] = (coefs[c.$1][c.$2] ?? 0) + minVal;
+          }
+        }
+
+        if(totalCost + minVal * minDelta != getTotalCost(coefs, problem.prices)) {
+          // throw Exception('predicted totalCost (${totalCost + minVal * minDelta}) != getTotalCost(coefs, problem.prices) (${getTotalCost(coefs, problem.prices)})');
+          print('predicted totalCost (${totalCost + minVal * minDelta}) != getTotalCost(coefs, problem.prices) (${getTotalCost(coefs, problem.prices)})');
+        }
+
+        done = true;
+        break;
       }
+      if(done) break;
     }
-
+    if(!done) {
+      print('No path found');
+      break;
+    }
   } while(continueRunning);
 
-  return coefs;
+  return TransportProblemSolution(coefs: coefs, problem: problem);
 }
 
-Coord? _chooseMinPrice(TransportProblem problem, Set<Coord> used) {
-  Coord minPrice = (-1, -1);
+List<Coord>? _chooseMinPrice(TransportProblem problem, Set<Coord> used) {
+  List<Coord> minPrice = [];
+  double minPriceValue = double.infinity;
   for(int x = 0; x < problem.supply.length; x++) {
     for(int y = 0; y < problem.demand.length; y++) {
       double price = problem.prices[x][y];
-      if(!used.contains((x, y)) && ((minPrice.$1 == -1) || price < problem.prices[minPrice.$1][minPrice.$2])) {
-        minPrice = (x, y);
+      if(!used.contains((x, y))) {
+        if(minPrice.isEmpty || price < minPriceValue) {
+          minPrice.clear();
+          minPrice.add((x, y));
+          minPriceValue = price;
+        } else if(price == minPriceValue) {
+          minPrice.add((x, y));
+        }
       }
     }
   }
   // used.add(minPrice);
-  if(minPrice.$1 == -1) return null;
+  if(minPrice.isEmpty) return null;
   return minPrice;
 }
 
