@@ -12,28 +12,15 @@ TransportProblemSolution solve(TransportProblem problem) {
   // Начальное решение
   List<double?> supplyLeft = List<double?>.from(problem.supply);
   List<double?> demandLeft = List<double?>.from(problem.demand);
-  // for(int i = 0; i < problem.supply.length; i++) {
-  //   coefs.add([]);
-  //   double supplyLeft = problem.supply[i];
-  //   for(int j = 0; j < problem.demand.length; j++) {
-  //     // coefs[i].add(problem.supply[i] * problem.demand[j] / problem.totalSupply);
-  //     coefs[i].add(min(supplyLeft, demandLeft[j]));
-  //     supplyLeft -= coefs[i][j];
-  //     demandLeft[j] -= coefs[i][j];
-  //   }
-  // }
   Set<Coord> used = {};
 
   int iter3 = 0;
   int maxIter3 = 100;
 
-  while(used.length < problem.supply.length * problem.demand.length /* supplyLeft.any((e) => e != null) || demandLeft.any((e) => e != null) */ && iter3 < maxIter3) {
+  while(used.length < problem.supply.length * problem.demand.length && iter3 < maxIter3) {
     iter3++;
     List<Coord>? minPrices = _chooseMinPrice(problem, used);
     if(minPrices == null) throw Exception("No min price found");
-    /* if(supplyLeft[minPrice.$1] == null || demandLeft[minPrice.$2] == null) {
-      
-    } else  */
     print("Min prices: ${minPrices.map((e) => "(${e.$1}, ${e.$2})").join(", ")}");
     for(var minPrice in minPrices) {
       if(supplyLeft[minPrice.$1] != null && demandLeft[minPrice.$2] != null) {
@@ -45,24 +32,10 @@ TransportProblemSolution solve(TransportProblem problem) {
         if(supplyLeft[minPrice.$1] == 0) {
           supplyLeft[minPrice.$1] = null;
           print("Drained supply ${minPrice.$1}");
-          // for(int i = 0; i < coefs.first.length; i++) {
-          //   used.add((i, minPrice.$2));
-          //   // print("Excluding (${minPrice.$1}, $i) of row ${minPrice.$1}");
-          // }
-          // print("Excluding row ${minPrice.$1}");
         }
         if(demandLeft[minPrice.$2] == 0) {
           print("Drained demand ${minPrice.$2}");
-          // if(supplyLeft[minPrice.$1] != null) {
             demandLeft[minPrice.$2] = null;
-            // for(int i = 0; i < coefs.length; i++) {
-            //   used.add((minPrice.$1, i));
-            //   // print("Excluding ($i, ${minPrice.$2}) of column ${minPrice.$2}");
-            // }
-            // print("Excluding column ${minPrice.$2}");
-          // } else {
-            // print("Drained supply ${minPrice.$1} and demand ${minPrice.$2}, letting demand be 0");
-          // }
         }
         used.add(minPrice);
         break;
@@ -130,7 +103,6 @@ TransportProblemSolution solve(TransportProblem problem) {
 
     List<List<double>> deltas = [];
     double minDelta = double.maxFinite;
-    // Coord minDeltaCoord = (-1, -1);
     Map<double, List<Coord>> deltaMap = {};
     for(int i = 0; i < problem.supply.length; i++) {
       deltas.add([]);
@@ -143,14 +115,12 @@ TransportProblemSolution solve(TransportProblem problem) {
         deltaMap.putIfAbsent(delta, () => []).add((i, j));
         if(delta < minDelta) {
           minDelta = delta;
-          // minDeltaCoord = (i, j);
         }
       }
     }
     double totalCost = getTotalCost(coefs, problem.prices);
     String s = "\n";
     for(int i = 0; i < problem.supply.length; i++) {
-        // print(coefs[i].map((e) => e ?? '--').join('\t') + "\t${u[i]}");
       s += "A$i\t";
       for(int j = 0; j < problem.demand.length; j++) {
         s += "${coefs[i][j]?.toStringAsFixed(0) ?? '--'} (c${problem.prices[i][j].toStringAsFixed(0)} d${deltas[i][j].toStringAsFixed(0)})\t";
@@ -161,7 +131,6 @@ TransportProblemSolution solve(TransportProblem problem) {
     print(s);
     print("Total cost: $totalCost");
 
-    // print("Min delta: $minDelta $minDeltaCoord");
     print('='*20);
 
     continueRunning = minDelta < 0 && iterations < maxIterations;
@@ -174,7 +143,7 @@ TransportProblemSolution solve(TransportProblem problem) {
       for(var minDeltaCoord in deltaMapEntry.value) {
         List<Coord>? path = getPath(coefs, [minDeltaCoord]);
 
-        if(path == null) continue;//throw Exception("Путь пуст");
+        if(path == null) continue;
         print("Path: ${path.join(' -> ')}");
 
         double minVal = double.infinity;
@@ -184,7 +153,6 @@ TransportProblemSolution solve(TransportProblem problem) {
 
         if(minVal == double.infinity) throw Exception('minVal == infinity');
         if(minVal == 0) {
-          //throw Exception('minVal == 0');
           print('minVal == 0, skipping');
           continue;
         }
@@ -202,7 +170,6 @@ TransportProblemSolution solve(TransportProblem problem) {
         }
 
         if(totalCost + minVal * minDelta != getTotalCost(coefs, problem.prices)) {
-          // throw Exception('predicted totalCost (${totalCost + minVal * minDelta}) != getTotalCost(coefs, problem.prices) (${getTotalCost(coefs, problem.prices)})');
           print('predicted totalCost (${totalCost + minVal * minDelta}) != getTotalCost(coefs, problem.prices) (${getTotalCost(coefs, problem.prices)})');
         }
 
@@ -237,7 +204,6 @@ List<Coord>? _chooseMinPrice(TransportProblem problem, Set<Coord> used) {
       }
     }
   }
-  // used.add(minPrice);
   if(minPrice.isEmpty) return null;
   return minPrice;
 }
@@ -256,10 +222,7 @@ List<Coord>? getPath(List<List<double?>> coefs, List<Coord> path) {
   if(path.last == path.first && path.length > 1) {
     return path;
   }
-  // if(path.length > coefs.length + coefs.first.length) return null;
   
-
-  // get possible steps
   Coord last = path.last;
   bool anyDirection = path.length == 1;
   bool vertical = anyDirection || path[path.length-1].$2 != path[path.length-2].$2; // Последнее перемещение - горизонтальное
@@ -268,11 +231,9 @@ List<Coord>? getPath(List<List<double?>> coefs, List<Coord> path) {
     for(int i = 0; i < coefs.length; i++) {
       if(i == last.$1) continue;
       if(coefs[i][last.$2] == null && (i, last.$2) != path.first) {
-        // print("[${path.length+1}] ($i, ${last.$2}) Coef is null");
         continue;
       }
       if(path.contains((i, last.$2)) && (i, last.$2) != path.first) {
-        // print("[${path.length+1}] ($i, ${last.$2}) Already in path");
         continue;
       }
       List<Coord>? newPath = getPath(coefs, [...path, (i, last.$2)]);
@@ -289,7 +250,4 @@ List<Coord>? getPath(List<List<double?>> coefs, List<Coord> path) {
     }
   }
   return null;
-  // get path with them
-  // return first non-null
-  // else return null
 }
